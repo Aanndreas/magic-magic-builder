@@ -14,8 +14,11 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { theme, format, strategy, commanderScryfallId } = body;
 
-  if (!theme || !format) {
-    return NextResponse.json({ error: "theme och format krävs" }, { status: 400 });
+  if (!format) {
+    return NextResponse.json({ error: "format krävs" }, { status: 400 });
+  }
+  if (!theme && !commanderScryfallId) {
+    return NextResponse.json({ error: "theme eller commanderScryfallId krävs" }, { status: 400 });
   }
 
   const { data: collection } = await supabase

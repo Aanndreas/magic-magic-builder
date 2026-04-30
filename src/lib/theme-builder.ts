@@ -118,10 +118,13 @@ async function discoverThemeCards(
     : "";
   const base = [idFilter, formatQuery].filter(Boolean).join(" ");
 
-  const [exact, support] = await Promise.all([
-    searchCardsByQuery(`t:${theme} ${base}`, 50),
-    searchCardsByQuery(`o:"${theme}" -t:${theme} ${base}`, 50),
-  ]);
+  // Skip theme searches when no theme given — rely on EDHREC + generals only
+  const [exact, support] = theme.trim()
+    ? await Promise.all([
+        searchCardsByQuery(`t:${theme} ${base}`, 50),
+        searchCardsByQuery(`o:"${theme}" -t:${theme} ${base}`, 50),
+      ])
+    : [[], []];
 
   const stapleNames = [
     ...GENERAL_STAPLES.any,

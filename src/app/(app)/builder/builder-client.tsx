@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import type { DeckRecommendation, MTGFormat } from "@/lib/supabase/types";
 import { Search, TrendingUp, ShoppingCart, Trophy } from "lucide-react";
 import ThemeBuilderClient from "./theme-builder-client";
+import CommanderBuilderClient from "./commander-builder-client";
 
 const FORMAT_LABELS: Record<string, string> = {
   commander: "Commander",
@@ -114,6 +115,7 @@ export default function BuilderClient() {
       <Tabs defaultValue="meta">
         <TabsList>
           <TabsTrigger value="meta">Meta-lekar</TabsTrigger>
+          <TabsTrigger value="commander">Commander-lek</TabsTrigger>
           <TabsTrigger value="theme">Bygg från tema</TabsTrigger>
         </TabsList>
 
@@ -228,6 +230,10 @@ export default function BuilderClient() {
               currency={currency}
             />
           )}
+        </TabsContent>
+
+        <TabsContent value="commander" className="mt-4">
+          <CommanderBuilderClient />
         </TabsContent>
 
         <TabsContent value="theme" className="mt-4">
