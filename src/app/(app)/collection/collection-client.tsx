@@ -72,21 +72,36 @@ export default function CollectionClient({ initialCards }: Props) {
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImportProgress(0);
+    setImportProgress(5);
     const formData = new FormData();
     formData.append("file", file);
+
+    const ticker = setInterval(() => {
+      setImportProgress((prev) => {
+        if (prev === null || prev >= 85) return prev;
+        return prev + Math.random() * 8;
+      });
+    }, 400);
+
     try {
       const res = await fetch("/api/collection/import", { method: "POST", body: formData });
       const data = await res.json();
+      clearInterval(ticker);
       if (!res.ok) { toast.error(data.error); return; }
+      setImportProgress(100);
       toast.success(`Importerade ${data.imported} kort! (${data.skipped} hoppades över)`);
       const refreshed = await fetch("/api/collection");
       const newCards = await refreshed.json();
       setCards(newCards);
       qc.invalidateQueries({ queryKey: ["collection"] });
+    } catch {
+      clearInterval(ticker);
+      toast.error("Importen misslyckades");
     } finally {
-      setImportProgress(null);
-      if (fileRef.current) fileRef.current.value = "";
+      setTimeout(() => {
+        setImportProgress(null);
+        if (fileRef.current) fileRef.current.value = "";
+      }, 600);
     }
   }
 
@@ -113,8 +128,10 @@ export default function CollectionClient({ initialCards }: Props) {
       {importProgress !== null && (
         <Card>
           <CardContent className="pt-4">
-            <p className="text-sm mb-2">Importerar...</p>
-            <Progress value={importProgress} />
+            <p className="text-sm mb-2">
+              {importProgress >= 100 ? "Importering klar!" : "Importerar kort... stanna kvar på sidan."}
+            </p>
+            <Progress value={importProgress} className="transition-all duration-300" />
           </CardContent>
         </Card>
       )}
