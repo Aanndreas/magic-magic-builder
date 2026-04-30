@@ -9,16 +9,32 @@ interface ScryfallCard {
   prices: { usd: string | null };
 }
 
-interface EdhrecDeckEntry {
+interface EdhrecCardView {
   name: string;
-  inclusion: number;
-  rank: number;
-  primary_types: string[];
+  inclusion?: number;
+  sanitized?: string;
 }
 
-interface EdhrecThemeData {
-  container?: { json_dict?: { cardlist?: EdhrecDeckEntry[] } };
-  panels?: { json_dict?: { cardlist?: EdhrecDeckEntry[] } };
+interface EdhrecCardList {
+  cardviews?: EdhrecCardView[];
+  cardlist?: EdhrecCardView[];
+  tag?: string;
+  header?: string;
+}
+
+interface EdhrecData {
+  container?: {
+    json_dict?: {
+      cardlists?: EdhrecCardList[];
+      cardlist?: EdhrecCardView[];
+    };
+  };
+  panels?: {
+    json_dict?: {
+      cardlists?: EdhrecCardList[];
+      cardlist?: EdhrecCardView[];
+    };
+  };
 }
 
 export interface EdhrecTopDeck {
@@ -31,7 +47,7 @@ export interface EdhrecTopDeck {
   cards: DeckCard[];
 }
 
-// Use Scryfall (sorted by EDHREC rank) for the top commander list — more reliable than scraping EDHREC's JSON structure
+// Use Scryfall (sorted by EDHREC rank) — more reliable than scraping EDHREC's JSON structure
 export async function fetchEdhrecTopCommanders(): Promise<EdhrecTopDeck[]> {
   const url = `${SCRYFALL_BASE}/cards/search?q=t:legendary+t:creature+legal:commander&order=edhrec&unique=cards`;
   const res = await fetch(url, { next: { revalidate: 43200 } });
@@ -57,16 +73,34 @@ export async function fetchEdhrecCommanderDeck(commanderName: string): Promise<D
   const res = await fetch(url, { next: { revalidate: 43200 } });
   if (!res.ok) return [];
 
-  const data: EdhrecThemeData = await res.json();
+  const data: EdhrecData = await res.json();
 
-  // Handle multiple possible JSON structures from EDHREC
-  const cardlist =
+  // Current EDHREC structure (2025): container.json_dict.cardlists[].cardviews
+  // Fallback to older structures in case they change again
+  const cardlists =
+    data?.container?.json_dict?.cardlists ??
+    data?.panels?.json_dict?.cardlists ??
+    [];
+
+  if (cardlists.length > 0) {
+    const all: DeckCard[] = [];
+    for (const group of cardlists) {
+      const views = group.cardviews ?? group.cardlist ?? [];
+      for (const card of views) {
+        if (card.name) all.push({ name: card.name, quantity: 1 });
+      }
+    }
+    return all.slice(0, 99);
+  }
+
+  // Older flat cardlist fallback
+  const flatList =
     data?.container?.json_dict?.cardlist ??
     data?.panels?.json_dict?.cardlist ??
     [];
 
-  return cardlist
-    .filter((c) => c.name && !c.primary_types?.includes("Basic"))
+  return flatList
+    .filter((c) => c.name)
     .slice(0, 99)
     .map((c) => ({ name: c.name, quantity: 1 }));
 }
