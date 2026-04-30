@@ -19,19 +19,28 @@ export async function POST(request: Request) {
   const names = parsed.map((c) => c.name);
   const scryfallMap = await getCardsByNames(names);
 
-  const rows = parsed.flatMap((card) => {
+  const rowMap = new Map<string, typeof parsed[0] & { scryfall_id: string; card_name: string; set: string; collector_number: string }>();
+  for (const card of parsed) {
     const scryfall = scryfallMap.get(card.name.toLowerCase());
-    if (!scryfall) return [];
-    return [{
-      user_id: user.id,
-      scryfall_id: scryfall.id,
-      card_name: scryfall.name,
-      quantity: card.quantity,
-      foil: card.foil,
-      set_code: card.set_code ?? scryfall.set,
-      collector_number: scryfall.collector_number,
-    }];
-  });
+    if (!scryfall) continue;
+    const key = `${scryfall.id}:${card.foil}`;
+    const existing = rowMap.get(key);
+    if (existing) {
+      existing.quantity += card.quantity;
+    } else {
+      rowMap.set(key, { ...card, scryfall_id: scryfall.id, card_name: scryfall.name, set: scryfall.set, collector_number: scryfall.collector_number });
+    }
+  }
+
+  const rows = Array.from(rowMap.values()).map((card) => ({
+    user_id: user.id,
+    scryfall_id: card.scryfall_id,
+    card_name: card.card_name,
+    quantity: card.quantity,
+    foil: card.foil,
+    set_code: card.set_code ?? card.set,
+    collector_number: card.collector_number,
+  }));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
