@@ -19,13 +19,15 @@ import CommanderBuilderClient from "./commander-builder-client";
 const FORMAT_LABELS: Record<string, string> = {
   commander: "Commander",
   standard: "Standard",
-  pauper: "Pauper",
+  pioneer: "Pioneer",
   modern: "Modern",
+  pauper: "Pauper",
 };
 
 const THEME_SUGGESTIONS: Record<string, string[]> = {
   commander: ["Atraxa", "Zombies", "Dragons", "Elves", "Tokens", "Artifacts", "Superfriends", "Tribal"],
   standard: ["Control", "Aggro", "Midrange", "Burn", "Tokens", "Ramp"],
+  pioneer: ["Azorius", "Control", "Aggro", "Spirits", "Greasefang", "Lotus Field"],
   modern: ["Burn", "Control", "Storm", "Tron", "Affinity", "Spirits"],
   pauper: ["Faeries", "Burn", "Stompy", "Flickers", "Elves", "Goblins"],
 };

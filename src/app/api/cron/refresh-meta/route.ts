@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const results = { success: 0, errors: 0 };
 
   // Goldfish formats
-  const goldfishFormats: MTGFormat[] = ["standard", "modern", "pauper"];
+  const goldfishFormats: MTGFormat[] = ["standard", "pioneer", "modern", "pauper"];
   for (const format of goldfishFormats) {
     try {
       const decks = await scrapeMetaDecks(format);
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   // EDHREC Commander
   try {
     const commanders = await fetchEdhrecTopCommanders();
-    for (const commander of commanders.slice(0, 15)) {
+    for (const commander of commanders.slice(0, 20)) {
       const cards = await fetchEdhrecCommanderDeck(commander.deck_name);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await supabase.from("meta_decks").upsert(
