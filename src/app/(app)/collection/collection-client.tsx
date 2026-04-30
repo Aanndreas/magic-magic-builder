@@ -11,7 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CollectionCard } from "@/lib/supabase/types";
 import { toast } from "sonner";
-import { Trash2, Upload, Plus, Search } from "lucide-react";
+import { Trash2, Upload, Plus, Search, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Props {
   initialCards: CollectionCard[];
@@ -24,6 +33,8 @@ export default function CollectionClient({ initialCards }: Props) {
   const [newCardQty, setNewCardQty] = useState(1);
   const [addingCard, setAddingCard] = useState(false);
   const [importProgress, setImportProgress] = useState<number | null>(null);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
@@ -58,6 +69,20 @@ export default function CollectionClient({ initialCards }: Props) {
       qc.invalidateQueries({ queryKey: ["collection"] });
     } finally {
       setAddingCard(false);
+    }
+  }
+
+  async function handleClearAll() {
+    setClearing(true);
+    try {
+      const res = await fetch("/api/collection", { method: "DELETE" });
+      if (!res.ok) { toast.error("Kunde inte rensa samlingen"); return; }
+      setCards([]);
+      setClearDialogOpen(false);
+      toast.success("Samlingen är rensad");
+      qc.invalidateQueries({ queryKey: ["collection"] });
+    } finally {
+      setClearing(false);
     }
   }
 
@@ -122,6 +147,31 @@ export default function CollectionClient({ initialCards }: Props) {
           <Button variant="outline" onClick={() => fileRef.current?.click()}>
             <Upload className="w-4 h-4 mr-2" /> Importera CSV
           </Button>
+          <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="text-destructive hover:text-destructive" disabled={cards.length === 0}>
+                <Trash2 className="w-4 h-4 mr-2" /> Rensa samling
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  Rensa hela samlingen?
+                </DialogTitle>
+                <DialogDescription>
+                  Detta tar bort alla {cards.length} kort från databasen permanent. Åtgärden kan inte ångras.
+                  Du kan alltid importera din CSV igen efteråt.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setClearDialogOpen(false)}>Avbryt</Button>
+                <Button variant="destructive" onClick={handleClearAll} disabled={clearing}>
+                  {clearing ? "Rensar..." : "Ja, rensa allt"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
