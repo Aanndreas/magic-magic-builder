@@ -12,8 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import type { DeckRecommendation, MTGFormat } from "@/lib/supabase/types";
-import { Search, TrendingUp, ShoppingCart, Trophy } from "lucide-react";
+import { Search, TrendingUp, ShoppingCart, Trophy, ExternalLink } from "lucide-react";
 import ThemeBuilderClient from "./theme-builder-client";
+import { CardHover } from "@/components/card-hover";
 import CommanderBuilderClient from "./commander-builder-client";
 
 const FORMAT_LABELS: Record<string, string> = {
@@ -367,13 +368,29 @@ function CardList({ cards, emptyText, showPrice, currency }: {
         <div key={i} className="flex items-center justify-between px-4 py-2.5 hover:bg-accent/30">
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="w-8 justify-center text-xs">{card.quantity}x</Badge>
-            <span className="text-sm font-medium">{card.name}</span>
+            <CardHover name={card.name}>
+              <span className="text-sm font-medium">{card.name}</span>
+            </CardHover>
           </div>
-          {showPrice && card.price_usd !== undefined && (
-            <span className="text-sm text-muted-foreground">
-              {formatPrice(card.price_usd * card.quantity, currency)}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {showPrice && card.price_usd !== undefined && (
+              <span className="text-sm text-muted-foreground">
+                {formatPrice(card.price_usd * card.quantity, currency)}
+              </span>
+            )}
+            {showPrice && (
+              <a
+                href={`https://www.cardmarket.com/en/Magic/Products/Search?searchString=${encodeURIComponent(card.name)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                onClick={(e) => e.stopPropagation()}
+                title="Köp på Cardmarket"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
+          </div>
         </div>
       ))}
       {showPrice && (

@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { ExternalLink } from "lucide-react";
 import type { MTGFormat } from "@/lib/supabase/types";
 import type { BuiltDeck, ThemedCard, Strategy } from "@/lib/theme-builder";
+import { CardHover } from "@/components/card-hover";
 
 const FORMAT_LABELS: Record<string, string> = {
   commander: "Commander",
@@ -325,7 +327,9 @@ function CardRow({ card, showPrice = false }: { card: ThemedCard; showPrice?: bo
     <div className="flex items-center justify-between px-1 py-0.5 hover:bg-accent/30 rounded text-sm">
       <div className="flex items-center gap-2">
         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot[card.category]}`} />
-        <span className={card.owned ? "" : "text-muted-foreground"}>{card.name}</span>
+        <CardHover name={card.name}>
+          <span className={card.owned ? "" : "text-muted-foreground"}>{card.name}</span>
+        </CardHover>
         {!card.owned && (
           <Badge variant="outline" className="text-xs py-0">Saknas</Badge>
         )}
@@ -333,6 +337,18 @@ function CardRow({ card, showPrice = false }: { card: ThemedCard; showPrice?: bo
       <div className="flex items-center gap-2">
         {showPrice && card.price_usd > 0 && (
           <span className="text-xs text-muted-foreground">${card.price_usd.toFixed(2)}</span>
+        )}
+        {showPrice && (
+          <a
+            href={`https://www.cardmarket.com/en/Magic/Products/Search?searchString=${encodeURIComponent(card.name)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            onClick={(e) => e.stopPropagation()}
+            title="Köp på Cardmarket"
+          >
+            <ExternalLink className="w-3 h-3" />
+          </a>
         )}
         <Badge variant="outline" className="text-xs w-7 justify-center">{card.quantity}x</Badge>
       </div>
