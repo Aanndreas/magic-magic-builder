@@ -61,12 +61,10 @@ export async function getCardById(id: string): Promise<ScryfallCard | null> {
 
 export async function getCardsByNames(names: string[]): Promise<Map<string, ScryfallCard>> {
   const result = new Map<string, ScryfallCard>();
-  // Scryfall collection endpoint handles up to 75 cards per request
   const chunks = [];
   for (let i = 0; i < names.length; i += 75) {
     chunks.push(names.slice(i, i + 75));
   }
-
   for (const chunk of chunks) {
     const res = await fetch(`${SCRYFALL_BASE}/cards/collection`, {
       method: "POST",
@@ -80,7 +78,28 @@ export async function getCardsByNames(names: string[]): Promise<Map<string, Scry
       result.set(card.name.toLowerCase(), card);
     }
   }
+  return result;
+}
 
+export async function getCardsByIds(ids: string[]): Promise<Map<string, ScryfallCard>> {
+  const result = new Map<string, ScryfallCard>();
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 75) {
+    chunks.push(ids.slice(i, i + 75));
+  }
+  for (const chunk of chunks) {
+    const res = await fetch(`${SCRYFALL_BASE}/cards/collection`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifiers: chunk.map((id) => ({ id })) }),
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) continue;
+    const data = await res.json();
+    for (const card of data.data as ScryfallCard[]) {
+      result.set(card.id, card);
+    }
+  }
   return result;
 }
 

@@ -103,7 +103,7 @@ export function parseDecklistText(text: string): DeckCard[] {
   return cards;
 }
 
-export function parseMoxfieldCsv(csv: string): Array<{ name: string; quantity: number; foil: boolean; set_code?: string }> {
+export function parseMoxfieldCsv(csv: string): Array<{ name: string; quantity: number; foil: boolean; set_code?: string; scryfall_id?: string }> {
   const lines = csv.trim().split("\n");
   if (lines.length < 2) return [];
 
@@ -111,7 +111,8 @@ export function parseMoxfieldCsv(csv: string): Array<{ name: string; quantity: n
   const nameIdx = headers.findIndex((h) => h === "name" || h === "card name");
   const qtyIdx = headers.findIndex((h) => h === "count" || h === "qty" || h === "quantity");
   const foilIdx = headers.findIndex((h) => h === "foil");
-  const setIdx = headers.findIndex((h) => h === "edition" || h === "set");
+  const setIdx = headers.findIndex((h) => h === "edition" || h === "set" || h === "set code");
+  const scryfallIdIdx = headers.findIndex((h) => h === "scryfall id");
 
   if (nameIdx === -1 || qtyIdx === -1) return [];
 
@@ -120,11 +121,13 @@ export function parseMoxfieldCsv(csv: string): Array<{ name: string; quantity: n
     const name = cols[nameIdx];
     const quantity = parseInt(cols[qtyIdx]);
     if (!name || isNaN(quantity) || quantity <= 0) return [];
+    const foilRaw = foilIdx !== -1 ? cols[foilIdx]?.toLowerCase() : "";
     return [{
       name,
       quantity,
-      foil: foilIdx !== -1 ? cols[foilIdx]?.toLowerCase() === "true" : false,
+      foil: foilRaw === "true" || foilRaw === "foil",
       set_code: setIdx !== -1 ? cols[setIdx] : undefined,
+      scryfall_id: scryfallIdIdx !== -1 ? cols[scryfallIdIdx] : undefined,
     }];
   });
 }
