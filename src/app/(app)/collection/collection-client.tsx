@@ -148,10 +148,11 @@ export default function CollectionClient({ initialCards }: Props) {
             <Upload className="w-4 h-4 mr-2" /> Importera CSV
           </Button>
           <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="text-destructive hover:text-destructive" disabled={cards.length === 0}>
-                <Trash2 className="w-4 h-4 mr-2" /> Rensa samling
-              </Button>
+            <DialogTrigger
+              disabled={cards.length === 0}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 h-9 text-sm font-medium text-destructive hover:bg-accent hover:text-destructive disabled:pointer-events-none disabled:opacity-50 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" /> Rensa samling
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
