@@ -103,6 +103,22 @@ export async function getCardsByIds(ids: string[]): Promise<Map<string, Scryfall
   return result;
 }
 
+export async function searchCardsByQuery(query: string, maxResults = 175): Promise<ScryfallCard[]> {
+  const results: ScryfallCard[] = [];
+  let url: string | undefined =
+    `${SCRYFALL_BASE}/cards/search?q=${encodeURIComponent(query)}&unique=cards&order=edhrec`;
+
+  while (url && results.length < maxResults) {
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) break;
+    const data: ScryfallSearchResult = await res.json();
+    results.push(...data.data);
+    url = data.has_more ? data.next_page : undefined;
+  }
+
+  return results.slice(0, maxResults);
+}
+
 export function getCardImageUrl(card: ScryfallCard): string {
   if (card.image_uris?.normal) return card.image_uris.normal;
   if (card.card_faces?.[0]?.image_uris?.normal)

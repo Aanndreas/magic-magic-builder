@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import type { DeckRecommendation, MTGFormat } from "@/lib/supabase/types";
 import { Search, TrendingUp, ShoppingCart, Trophy } from "lucide-react";
+import ThemeBuilderClient from "./theme-builder-client";
 
 const FORMAT_LABELS: Record<string, string> = {
   commander: "Commander",
@@ -110,116 +111,129 @@ export default function BuilderClient() {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Select value={format} onValueChange={(v) => { setFormat(v as MTGFormat); setSearch(""); setDebouncedSearch(""); }}>
-          <SelectTrigger className="w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(FORMAT_LABELS).map(([val, label]) => (
-              <SelectItem key={val} value={val}>{label}</SelectItem>
+      <Tabs defaultValue="meta">
+        <TabsList>
+          <TabsTrigger value="meta">Meta-lekar</TabsTrigger>
+          <TabsTrigger value="theme">Bygg från tema</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="meta" className="mt-4 space-y-6">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={format} onValueChange={(v) => { setFormat(v as MTGFormat); setSearch(""); setDebouncedSearch(""); }}>
+              <SelectTrigger className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(FORMAT_LABELS).map(([val, label]) => (
+                  <SelectItem key={val} value={val}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Sök efter lektyp..."
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="coverage">Sortera: Täckning %</SelectItem>
+                <SelectItem value="budgetCost">Sortera: Billigaste köp</SelectItem>
+                <SelectItem value="popularity">Sortera: Popularitet</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Theme suggestion chips */}
+          <div className="flex flex-wrap gap-2">
+            {(THEME_SUGGESTIONS[format] ?? []).map((theme) => (
+              <Badge
+                key={theme}
+                variant={search === theme ? "default" : "secondary"}
+                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => handleThemeChip(search === theme ? "" : theme)}
+              >
+                {theme}
+              </Badge>
             ))}
-          </SelectContent>
-        </Select>
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Sök efter lektyp..."
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="coverage">Sortera: Täckning %</SelectItem>
-            <SelectItem value="budgetCost">Sortera: Billigaste köp</SelectItem>
-            <SelectItem value="popularity">Sortera: Popularitet</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          </div>
 
-      {/* Theme suggestion chips */}
-      <div className="flex flex-wrap gap-2">
-        {(THEME_SUGGESTIONS[format] ?? []).map((theme) => (
-          <Badge
-            key={theme}
-            variant={search === theme ? "default" : "secondary"}
-            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-            onClick={() => handleThemeChip(search === theme ? "" : theme)}
-          >
-            {theme}
-          </Badge>
-        ))}
-      </div>
+          {isLoading && (
+            <div className="text-center py-12 text-muted-foreground">
+              Hämtar meta-lekar och jämför med din samling...
+            </div>
+          )}
 
-      {isLoading && (
-        <div className="text-center py-12 text-muted-foreground">
-          Hämtar meta-lekar och jämför med din samling...
-        </div>
-      )}
+          {error && (
+            <div className="text-center py-12 text-destructive">
+              {(error as Error).message}
+            </div>
+          )}
 
-      {error && (
-        <div className="text-center py-12 text-destructive">
-          {(error as Error).message}
-        </div>
-      )}
+          {sorted.length === 0 && !isLoading && (
+            <div className="text-center py-12 text-muted-foreground">
+              Inga meta-lekar hittades. Prova ett annat sökord eller kör meta-uppdateringen.
+            </div>
+          )}
 
-      {sorted.length === 0 && !isLoading && (
-        <div className="text-center py-12 text-muted-foreground">
-          Inga meta-lekar hittades. Prova ett annat sökord eller kör meta-uppdateringen.
-        </div>
-      )}
+          {sorted.length > 0 && !selectedRec && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sorted.map((rec) => (
+                <Card
+                  key={rec.metaDeck.id}
+                  className="cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => setSelectedRec(rec)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-base leading-tight">{rec.metaDeck.deck_name}</CardTitle>
+                      <Badge variant={rec.coveragePercent >= 70 ? "default" : rec.coveragePercent >= 40 ? "secondary" : "outline"}>
+                        {rec.coveragePercent}%
+                      </Badge>
+                    </div>
+                    <CardDescription className="capitalize">{rec.metaDeck.format} · {rec.metaDeck.source}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Progress value={rec.coveragePercent} className="h-2" />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{rec.alreadyHaveCount}/{rec.totalCards} kort</span>
+                      {rec.metaDeck.popularity && <span>{rec.metaDeck.popularity} spelare</span>}
+                    </div>
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-green-600 font-medium">
+                        Budget: {formatPrice(rec.budgetUpgrade.totalCost, currency)}
+                      </span>
+                      <span className="text-muted-foreground">|</span>
+                      <span className="text-muted-foreground">
+                        Full: {formatPrice(rec.fullNetdeck.totalCost, currency)}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
-      {sorted.length > 0 && !selectedRec && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sorted.map((rec) => (
-            <Card
-              key={rec.metaDeck.id}
-              className="cursor-pointer hover:border-primary transition-colors"
-              onClick={() => setSelectedRec(rec)}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-base leading-tight">{rec.metaDeck.deck_name}</CardTitle>
-                  <Badge variant={rec.coveragePercent >= 70 ? "default" : rec.coveragePercent >= 40 ? "secondary" : "outline"}>
-                    {rec.coveragePercent}%
-                  </Badge>
-                </div>
-                <CardDescription className="capitalize">{rec.metaDeck.format} · {rec.metaDeck.source}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Progress value={rec.coveragePercent} className="h-2" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{rec.alreadyHaveCount}/{rec.totalCards} kort</span>
-                  {rec.metaDeck.popularity && <span>{rec.metaDeck.popularity} spelare</span>}
-                </div>
-                <div className="flex gap-2 text-xs">
-                  <span className="text-green-600 font-medium">
-                    Budget: {formatPrice(rec.budgetUpgrade.totalCost, currency)}
-                  </span>
-                  <span className="text-muted-foreground">|</span>
-                  <span className="text-muted-foreground">
-                    Full: {formatPrice(rec.fullNetdeck.totalCost, currency)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+          {selectedRec && (
+            <RecommendationDetail
+              rec={selectedRec}
+              onBack={() => setSelectedRec(null)}
+              onSave={handleSaveRec}
+              currency={currency}
+            />
+          )}
+        </TabsContent>
 
-      {selectedRec && (
-        <RecommendationDetail
-          rec={selectedRec}
-          onBack={() => setSelectedRec(null)}
-          onSave={handleSaveRec}
-          currency={currency}
-        />
-      )}
+        <TabsContent value="theme" className="mt-4">
+          <ThemeBuilderClient />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

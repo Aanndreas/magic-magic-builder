@@ -10,6 +10,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/collection", label: "Min samling" },
   { href: "/builder", label: "Lek-byggaren" },
+  { href: "/saved", label: "Sparade lekar" },
 ];
 
 export default function Nav() {
