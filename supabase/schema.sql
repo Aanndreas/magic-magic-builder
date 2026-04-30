@@ -39,6 +39,7 @@ create table meta_decks (
   fetched_at timestamptz default now() not null
 );
 
+create unique index on meta_decks (deck_name, format, source);
 create index on meta_decks (format);
 create index on meta_decks (fetched_at);
 alter table meta_decks enable row level security;
