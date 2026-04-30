@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/refresh-meta",
-      "schedule": "0 */12 * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
