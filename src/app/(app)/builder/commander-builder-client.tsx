@@ -3,11 +3,10 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ExternalLink } from "lucide-react";
+import { Search, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { BuiltDeck, ThemedCard } from "@/lib/theme-builder";
 import { CardHover } from "@/components/card-hover";
@@ -17,20 +16,20 @@ const COLOR_LABEL: Record<string, string> = {
 };
 
 interface Commander {
-  id: string;
-  name: string;
+  id:             string;
+  name:           string;
   color_identity: string[];
-  prices: { usd: string | null };
-  owned: boolean;
+  prices:         { usd: string | null };
+  owned:          boolean;
 }
 
 export default function CommanderBuilderClient() {
-  const [query, setQuery] = useState("");
+  const [query,       setQuery]       = useState("");
   const [suggestions, setSuggestions] = useState<Commander[]>([]);
-  const [selected, setSelected] = useState<Commander | null>(null);
-  const [result, setResult] = useState<{ versionA: BuiltDeck; versionB: BuiltDeck } | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [building, setBuilding] = useState(false);
+  const [selected,    setSelected]    = useState<Commander | null>(null);
+  const [result,      setResult]      = useState<{ versionA: BuiltDeck; versionB: BuiltDeck } | null>(null);
+  const [searching,   setSearching]   = useState(false);
+  const [building,    setBuilding]    = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handleQueryChange(val: string) {
@@ -38,10 +37,8 @@ export default function CommanderBuilderClient() {
     setSelected(null);
     setResult(null);
     setSuggestions([]);
-
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (val.length < 2) return;
-
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
@@ -68,11 +65,7 @@ export default function CommanderBuilderClient() {
       const res = await fetch("/api/theme-builder/build", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          theme: "",
-          format: "commander",
-          commanderScryfallId: selected.id,
-        }),
+        body: JSON.stringify({ theme: "", format: "commander", commanderScryfallId: selected.id }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error); return; }
@@ -83,17 +76,19 @@ export default function CommanderBuilderClient() {
   }
 
   function reset() {
-    setQuery("");
-    setSuggestions([]);
-    setSelected(null);
-    setResult(null);
+    setQuery(""); setSuggestions([]); setSelected(null); setResult(null);
   }
 
   if (building) {
     return (
-      <div className="text-center py-16 space-y-3">
-        <div className="text-4xl">🃏</div>
-        <p className="text-muted-foreground">Bygger lek med {selected?.name}... ~20 sekunder</p>
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <Loader2 className="w-7 h-7 text-primary animate-spin-slow" />
+        </div>
+        <div className="text-center">
+          <p className="font-semibold">{selected?.name}</p>
+          <p className="text-sm text-muted-foreground mt-1">Hämtar EDHREC-data och bygger lek... ~20 sek</p>
+        </div>
       </div>
     );
   }
@@ -114,17 +109,15 @@ export default function CommanderBuilderClient() {
           placeholder="Sök commander, t.ex. Atraxa, Ur-Dragon..."
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
-          className="pl-9"
+          className="pl-9 bg-card/60"
         />
         {searching && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-            Söker...
-          </span>
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
         )}
       </div>
 
       {suggestions.length > 0 && !selected && (
-        <div className="rounded-md border divide-y shadow-md">
+        <div className="rounded-xl border border-border/60 divide-y divide-border/40 shadow-xl overflow-hidden animate-fade-up">
           {suggestions.map((cmd) => (
             <button
               key={cmd.id}
@@ -149,21 +142,25 @@ export default function CommanderBuilderClient() {
       )}
 
       {selected && (
-        <div className="rounded-md border px-4 py-3 flex items-center justify-between">
+        <div className="rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 flex items-center justify-between">
           <div>
-            <p className="font-medium">{selected.name}</p>
+            <p className="font-medium text-sm">{selected.name}</p>
             <p className="text-xs text-muted-foreground">
               {selected.color_identity.map((c) => COLOR_LABEL[c] ?? c).join(" / ") || "Färglös"}
               {selected.owned && " · Du äger den"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={reset} className="text-muted-foreground">
+          <Button variant="ghost" size="sm" onClick={reset} className="text-xs text-muted-foreground">
             Byt
           </Button>
         </div>
       )}
 
-      <Button className="w-full" disabled={!selected} onClick={handleBuild}>
+      <Button
+        className="w-full glow-gold font-semibold"
+        disabled={!selected}
+        onClick={handleBuild}
+      >
         Bygg lek med {selected?.name ?? "vald commander"}
       </Button>
     </div>
@@ -180,17 +177,19 @@ function CommanderResult({
   onReset: () => void;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 animate-fade-up">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={onReset}>← Ny commander</Button>
+        <Button variant="ghost" size="sm" onClick={onReset} className="text-muted-foreground">
+          ← Ny commander
+        </Button>
         <div>
-          <h2 className="text-xl font-bold">{commander.name}</h2>
+          <h2 className="text-lg font-bold">{commander.name}</h2>
           <p className="text-xs text-muted-foreground">
             {commander.color_identity.map((c) => COLOR_LABEL[c] ?? c).join(" / ") || "Färglös"}
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <DeckVersion deck={result.versionA} title="Din samling" subtitle="Bara kort du äger" />
         <DeckVersion deck={result.versionB} title="Uppgraderad" subtitle="+ EDHREC-rekommendationer" showBuyList />
       </div>
@@ -213,26 +212,34 @@ function DeckVersion({
   const maxCount = Math.max(...cmcKeys.map((k) => deck.manaCurve[k] ?? 0), 1);
 
   return (
-    <Card>
-      <CardContent className="pt-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-semibold">{title}</p>
-            <p className="text-xs text-muted-foreground">{subtitle} · {deck.ownedCount} äger du av {deck.totalCards}</p>
-          </div>
-          <Badge variant="outline">{deck.totalCards} kort</Badge>
-        </div>
-
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+      <div className="p-4 border-b border-border/40 flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Manakurva</p>
-          <div className="flex items-end gap-1 h-10">
-            {cmcKeys.map((k) => {
+          <p className="font-semibold text-sm">{title}</p>
+          <p className="text-xs text-muted-foreground">{subtitle} · {deck.ownedCount} äger du av {deck.totalCards}</p>
+        </div>
+        <Badge variant="outline" className="text-xs">{deck.totalCards} kort</Badge>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {/* Mana curve */}
+        <div>
+          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Manakurva</p>
+          <div className="flex items-end gap-1.5 h-12">
+            {cmcKeys.map((k, idx) => {
               const count = deck.manaCurve[k] ?? 0;
-              const pct = Math.round((count / maxCount) * 100);
+              const pct   = Math.round((count / maxCount) * 100);
               return (
                 <div key={k} className="flex flex-col items-center flex-1 gap-0.5">
                   <span className="text-xs text-muted-foreground leading-none">{count || ""}</span>
-                  <div className="w-full bg-primary rounded-sm" style={{ height: `${Math.max(pct, count > 0 ? 10 : 0)}%` }} />
+                  <div
+                    className="w-full rounded-sm animate-bar-grow"
+                    style={{
+                      height: `${Math.max(pct, count > 0 ? 10 : 0)}%`,
+                      background: `oklch(0.76 0.14 ${75 + idx * 8})`,
+                      animationDelay: `${idx * 60}ms`,
+                    }}
+                  />
                   <span className="text-xs text-muted-foreground leading-none">{k}</span>
                 </div>
               );
@@ -240,13 +247,13 @@ function DeckVersion({
           </div>
         </div>
 
-        <Separator />
+        <Separator className="bg-border/40" />
 
         <Tabs defaultValue="spells">
-          <TabsList className="w-full">
-            <TabsTrigger value="spells" className="flex-1">Stavningar ({deck.cards.length})</TabsTrigger>
-            <TabsTrigger value="lands" className="flex-1">Land ({deck.lands.length})</TabsTrigger>
-            {showBuyList && <TabsTrigger value="buy" className="flex-1">Köp ({deck.buyList.length})</TabsTrigger>}
+          <TabsList className="w-full bg-muted/50">
+            <TabsTrigger value="spells" className="flex-1 text-xs">Stavningar ({deck.cards.length})</TabsTrigger>
+            <TabsTrigger value="lands"  className="flex-1 text-xs">Land ({deck.lands.length})</TabsTrigger>
+            {showBuyList && <TabsTrigger value="buy" className="flex-1 text-xs">Köp ({deck.buyList.length})</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="spells" className="mt-2 max-h-72 overflow-y-auto space-y-0.5">
@@ -260,39 +267,45 @@ function DeckVersion({
 
           {showBuyList && (
             <TabsContent value="buy" className="mt-2 max-h-72 overflow-y-auto space-y-0.5">
-              <p className="text-xs text-muted-foreground mb-2">Total: ${deck.buyCost.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground px-1 mb-2">
+                Total: <span className="text-primary font-semibold">${deck.buyCost.toFixed(2)}</span>
+              </p>
               {deck.buyList.map((card, i) => <CardRow key={i} card={card} showPrice />)}
             </TabsContent>
           )}
         </Tabs>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 function CardRow({ card, showPrice = false }: { card: ThemedCard; showPrice?: boolean }) {
-  const dot: Record<string, string> = {
-    exact: "bg-green-500", support: "bg-blue-400", general: "bg-gray-400", land: "bg-amber-400",
+  const dotColor: Record<string, string> = {
+    exact:   "bg-emerald-500",
+    support: "bg-blue-400",
+    general: "bg-muted-foreground/50",
+    land:    "bg-amber-400",
   };
   return (
-    <div className="flex items-center justify-between px-1 py-0.5 hover:bg-accent/30 rounded text-sm">
-      <div className="flex items-center gap-2">
-        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot[card.category]}`} />
+    <div className="flex items-center justify-between px-1 py-1 hover:bg-accent/30 rounded transition-colors text-sm">
+      <div className="flex items-center gap-2 min-w-0">
+        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor[card.category]}`} />
         <CardHover name={card.name}>
-          <span className={card.owned ? "" : "text-muted-foreground"}>{card.name}</span>
+          <span className={`truncate hover:text-primary transition-colors cursor-default ${card.owned ? "" : "text-muted-foreground"}`}>
+            {card.name}
+          </span>
         </CardHover>
-        {!card.owned && <Badge variant="outline" className="text-xs py-0">Saknas</Badge>}
+        {!card.owned && <Badge variant="outline" className="text-xs py-0 px-1 shrink-0">Saknas</Badge>}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 shrink-0 ml-2">
         {showPrice && card.price_usd > 0 && (
           <span className="text-xs text-muted-foreground">${card.price_usd.toFixed(2)}</span>
         )}
         {showPrice && (
           <a
             href={`https://www.cardmarket.com/en/Magic/Products/Search?searchString=${encodeURIComponent(card.name)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            target="_blank" rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-primary transition-colors"
             onClick={(e) => e.stopPropagation()}
             title="Köp på Cardmarket"
           >

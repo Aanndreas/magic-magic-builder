@@ -48,75 +48,149 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Light mode (fallback — app runs dark by default) */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.98 0.004 265);
+  --foreground: oklch(0.14 0.02 265);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.14 0.02 265);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.14 0.02 265);
+  --primary: oklch(0.60 0.14 75);
+  --primary-foreground: oklch(0.98 0.005 100);
+  --secondary: oklch(0.94 0.01 265);
+  --secondary-foreground: oklch(0.20 0.02 265);
+  --muted: oklch(0.95 0.008 265);
+  --muted-foreground: oklch(0.50 0.02 265);
+  --accent: oklch(0.93 0.015 265);
+  --accent-foreground: oklch(0.20 0.02 265);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: oklch(0.88 0.01 265);
+  --input: oklch(0.88 0.01 265);
+  --ring: oklch(0.60 0.14 75 / 0.5);
+  --chart-1: oklch(0.76 0.14 75);
+  --chart-2: oklch(0.65 0.18 290);
+  --chart-3: oklch(0.68 0.14 195);
+  --chart-4: oklch(0.66 0.15 148);
+  --chart-5: oklch(0.63 0.20 22);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.97 0.005 265);
+  --sidebar-foreground: oklch(0.14 0.02 265);
+  --sidebar-primary: oklch(0.60 0.14 75);
+  --sidebar-primary-foreground: oklch(0.98 0.005 100);
+  --sidebar-accent: oklch(0.93 0.015 265);
+  --sidebar-accent-foreground: oklch(0.20 0.02 265);
+  --sidebar-border: oklch(0.88 0.01 265);
+  --sidebar-ring: oklch(0.60 0.14 75 / 0.5);
 }
 
+/* Dark mode — MTG midnight */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.11 0.018 268);
+  --foreground: oklch(0.93 0.008 100);
+  --card: oklch(0.17 0.022 268);
+  --card-foreground: oklch(0.93 0.008 100);
+  --popover: oklch(0.15 0.020 268);
+  --popover-foreground: oklch(0.93 0.008 100);
+  --primary: oklch(0.76 0.14 75);
+  --primary-foreground: oklch(0.12 0.015 75);
+  --secondary: oklch(0.24 0.035 275);
+  --secondary-foreground: oklch(0.88 0.012 100);
+  --muted: oklch(0.22 0.025 268);
+  --muted-foreground: oklch(0.58 0.030 258);
+  --accent: oklch(0.26 0.040 275);
+  --accent-foreground: oklch(0.90 0.010 100);
+  --destructive: oklch(0.64 0.22 22);
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.10);
+  --ring: oklch(0.76 0.14 75 / 0.40);
+  --chart-1: oklch(0.76 0.14 75);
+  --chart-2: oklch(0.65 0.18 290);
+  --chart-3: oklch(0.68 0.14 195);
+  --chart-4: oklch(0.66 0.15 148);
+  --chart-5: oklch(0.63 0.20 22);
+  --sidebar: oklch(0.15 0.022 268);
+  --sidebar-foreground: oklch(0.93 0.008 100);
+  --sidebar-primary: oklch(0.76 0.14 75);
+  --sidebar-primary-foreground: oklch(0.12 0.015 75);
+  --sidebar-accent: oklch(0.26 0.040 275);
+  --sidebar-accent-foreground: oklch(0.90 0.010 100);
+  --sidebar-border: oklch(1 0 0 / 0.08);
+  --sidebar-ring: oklch(0.76 0.14 75 / 0.40);
 }
 
+/* ─── Animations ─────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in  { animation: fade-in  0.25s ease both; }
+.animate-fade-up  { animation: fade-up  0.35s ease both; }
+.animate-bar-grow {
+  transform-origin: bottom;
+  animation: bar-grow 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.animate-spin-slow { animation: spin-slow 1.6s linear infinite; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    var(--accent) 50%,
+    var(--muted) 100%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Component polish ────────────────────────────────────── */
+
+/* Progress bar — warm gold gradient */
+.dark [data-slot="progress-indicator"] {
+  background: linear-gradient(90deg, oklch(0.68 0.14 70) 0%, oklch(0.82 0.12 82) 100%);
+}
+
+/* Input — gold ring on focus */
+.dark [data-slot="input"]:focus-visible {
+  border-color: oklch(0.76 0.14 75 / 0.6);
+  box-shadow: 0 0 0 3px oklch(0.76 0.14 75 / 0.15);
+}
+
+/* Select trigger — gold ring on focus */
+.dark [data-slot="select-trigger"]:focus-visible {
+  border-color: oklch(0.76 0.14 75 / 0.6);
+  box-shadow: 0 0 0 3px oklch(0.76 0.14 75 / 0.15);
+}
+
+/* Primary button — subtle gold glow always-on */
+.dark [data-slot="button"].bg-primary,
+.dark button.bg-primary {
+  box-shadow: 0 1px 0 oklch(0.76 0.14 75 / 0.25) inset, 0 0 16px oklch(0.76 0.14 75 / 0.15);
+}
+
+/* ─── Base ────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -127,4 +201,29 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ─── Gradient text utility ───────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, oklch(0.85 0.12 75) 0%, oklch(0.75 0.10 45) 50%, oklch(0.80 0.14 85) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gold glow on primary buttons */
+.dark .glow-gold {
+  box-shadow: 0 0 20px oklch(0.76 0.14 75 / 0.3), 0 0 40px oklch(0.76 0.14 75 / 0.1);
+}
+
+/* Subtle card hover glow */
+.dark .card-hover-glow:hover {
+  box-shadow: 0 0 0 1px oklch(0.76 0.14 75 / 0.4), 0 4px 24px oklch(0.76 0.14 75 / 0.08);
+  border-color: oklch(0.76 0.14 75 / 0.4) !important;
+}
+
+/* Glass card */
+.dark .glass {
+  background: oklch(0.17 0.022 268 / 0.80);
+  backdrop-filter: blur(8px);
 }

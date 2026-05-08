@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,16 +26,16 @@ interface Props {
 }
 
 export default function CollectionClient({ initialCards }: Props) {
-  const [cards, setCards] = useState(initialCards);
-  const [search, setSearch] = useState("");
-  const [newCardName, setNewCardName] = useState("");
-  const [newCardQty, setNewCardQty] = useState(1);
-  const [addingCard, setAddingCard] = useState(false);
+  const [cards,          setCards]          = useState(initialCards);
+  const [search,         setSearch]         = useState("");
+  const [newCardName,    setNewCardName]    = useState("");
+  const [newCardQty,     setNewCardQty]     = useState(1);
+  const [addingCard,     setAddingCard]     = useState(false);
   const [importProgress, setImportProgress] = useState<number | null>(null);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
-  const [clearing, setClearing] = useState(false);
+  const [clearing,       setClearing]       = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const qc = useQueryClient();
+  const qc      = useQueryClient();
 
   const filtered = cards.filter((c) =>
     c.card_name.toLowerCase().includes(search.toLowerCase())
@@ -47,7 +46,7 @@ export default function CollectionClient({ initialCards }: Props) {
     if (!newCardName.trim()) return;
     setAddingCard(true);
     try {
-      const res = await fetch("/api/collection", {
+      const res  = await fetch("/api/collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ card_name: newCardName.trim(), quantity: newCardQty }),
@@ -109,14 +108,14 @@ export default function CollectionClient({ initialCards }: Props) {
     }, 400);
 
     try {
-      const res = await fetch("/api/collection/import", { method: "POST", body: formData });
+      const res  = await fetch("/api/collection/import", { method: "POST", body: formData });
       const data = await res.json();
       clearInterval(ticker);
       if (!res.ok) { toast.error(data.error); return; }
       setImportProgress(100);
       toast.success(`Importerade ${data.imported} kort! (${data.skipped} hoppades över)`);
-      const refreshed = await fetch("/api/collection");
-      const newCards = await refreshed.json();
+      const refreshed  = await fetch("/api/collection");
+      const newCards   = await refreshed.json();
       setCards(newCards);
       qc.invalidateQueries({ queryKey: ["collection"] });
     } catch {
@@ -130,38 +129,38 @@ export default function CollectionClient({ initialCards }: Props) {
     }
   }
 
-  const totalUnique = cards.length;
+  const totalUnique   = cards.length;
   const totalQuantity = cards.reduce((s, c) => s + c.quantity, 0);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Min samling</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-3xl font-bold gradient-text">Min samling</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
             {totalUnique} unika kort · {totalQuantity} totalt
           </p>
         </div>
         <div className="flex gap-2">
           <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
-          <Button variant="outline" onClick={() => fileRef.current?.click()}>
-            <Upload className="w-4 h-4 mr-2" /> Importera CSV
+          <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} className="gap-1.5">
+            <Upload className="w-3.5 h-3.5" /> Importera CSV
           </Button>
           <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
             <DialogTrigger
               disabled={cards.length === 0}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-3 h-9 text-sm font-medium text-destructive hover:bg-accent hover:text-destructive disabled:pointer-events-none disabled:opacity-50 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-input bg-background px-3 h-9 text-sm font-medium text-destructive hover:bg-accent hover:text-destructive disabled:pointer-events-none disabled:opacity-50 transition-colors"
             >
-              <Trash2 className="w-4 h-4" /> Rensa samling
+              <Trash2 className="w-3.5 h-3.5" /> Rensa samling
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="border-border/60">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  <AlertTriangle className="w-4 h-4 text-destructive" />
                   Rensa hela samlingen?
                 </DialogTitle>
                 <DialogDescription>
-                  Detta tar bort alla {cards.length} kort från databasen permanent. Åtgärden kan inte ångras.
+                  Detta tar bort alla {cards.length} kort permanent. Åtgärden kan inte ångras.
                   Du kan alltid importera din CSV igen efteråt.
                 </DialogDescription>
               </DialogHeader>
@@ -176,19 +175,18 @@ export default function CollectionClient({ initialCards }: Props) {
         </div>
       </div>
 
+      {/* Import progress */}
       {importProgress !== null && (
-        <Card>
-          <CardContent className="pt-4">
-            <p className="text-sm mb-2">
-              {importProgress >= 100 ? "Importering klar!" : "Importerar kort... stanna kvar på sidan."}
-            </p>
-            <Progress value={importProgress} className="transition-all duration-300" />
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-border/60 bg-card p-4 space-y-2">
+          <p className="text-sm font-medium">
+            {importProgress >= 100 ? "✓ Importering klar!" : "Importerar kort — stanna kvar på sidan"}
+          </p>
+          <Progress value={importProgress} className="h-1.5 transition-all duration-300" />
+        </div>
       )}
 
       <Tabs defaultValue="list">
-        <TabsList>
+        <TabsList className="bg-muted/50">
           <TabsTrigger value="list">Lista</TabsTrigger>
           <TabsTrigger value="add">Lägg till kort</TabsTrigger>
         </TabsList>
@@ -200,44 +198,46 @@ export default function CollectionClient({ initialCards }: Props) {
               placeholder="Sök efter kort..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              className="pl-9 bg-card/60"
             />
           </div>
 
           {filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-16 text-muted-foreground text-sm">
               {cards.length === 0
                 ? "Inga kort ännu. Importera en CSV eller lägg till kort manuellt."
                 : "Inga kort matchar sökningen."}
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-xl border border-border/60 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Kortnamn</TableHead>
-                    <TableHead className="w-20 text-center">Antal</TableHead>
-                    <TableHead className="w-24">Set</TableHead>
-                    <TableHead className="w-12"></TableHead>
+                  <TableRow className="border-border/40 hover:bg-transparent">
+                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wide">Kortnamn</TableHead>
+                    <TableHead className="w-20 text-center text-xs text-muted-foreground uppercase tracking-wide">Antal</TableHead>
+                    <TableHead className="w-24 text-xs text-muted-foreground uppercase tracking-wide">Set</TableHead>
+                    <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((card) => (
-                    <TableRow key={card.id}>
-                      <TableCell className="font-medium">
+                    <TableRow key={card.id} className="border-border/30 hover:bg-accent/20 transition-colors">
+                      <TableCell className="font-medium text-sm py-2.5">
                         {card.card_name}
-                        {card.foil && <Badge variant="outline" className="ml-2 text-xs">Foil</Badge>}
+                        {card.foil && (
+                          <Badge variant="outline" className="ml-2 text-xs py-0 px-1.5 text-primary border-primary/30">
+                            Foil
+                          </Badge>
+                        )}
                       </TableCell>
-                      <TableCell className="text-center">{card.quantity}</TableCell>
-                      <TableCell className="text-muted-foreground uppercase text-xs">
-                        {card.set_code}
-                      </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center text-sm py-2.5">{card.quantity}</TableCell>
+                      <TableCell className="text-muted-foreground uppercase text-xs py-2.5">{card.set_code}</TableCell>
+                      <TableCell className="py-2.5">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(card.id, card.card_name)}
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
@@ -251,38 +251,36 @@ export default function CollectionClient({ initialCards }: Props) {
         </TabsContent>
 
         <TabsContent value="add" className="mt-4">
-          <Card className="max-w-md">
-            <CardHeader>
-              <CardTitle>Lägg till kort manuellt</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddCard} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Kortnamn</label>
-                  <Input
-                    placeholder="T.ex. Lightning Bolt"
-                    value={newCardName}
-                    onChange={(e) => setNewCardName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Antal</label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={newCardQty}
-                    onChange={(e) => setNewCardQty(parseInt(e.target.value) || 1)}
-                  />
-                </div>
-                <Button type="submit" disabled={addingCard} className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  {addingCard ? "Lägger till..." : "Lägg till"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <div className="max-w-md rounded-xl border border-border/60 bg-card p-6">
+            <h3 className="font-semibold mb-4 text-sm">Lägg till kort manuellt</h3>
+            <form onSubmit={handleAddCard} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Kortnamn</label>
+                <Input
+                  placeholder="T.ex. Lightning Bolt"
+                  value={newCardName}
+                  onChange={(e) => setNewCardName(e.target.value)}
+                  className="bg-background/60"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Antal</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={newCardQty}
+                  onChange={(e) => setNewCardQty(parseInt(e.target.value) || 1)}
+                  className="bg-background/60"
+                />
+              </div>
+              <Button type="submit" disabled={addingCard} className="w-full glow-gold font-semibold gap-1.5">
+                <Plus className="w-4 h-4" />
+                {addingCard ? "Lägger till..." : "Lägg till"}
+              </Button>
+            </form>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

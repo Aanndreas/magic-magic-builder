@@ -2,13 +2,12 @@
 
 import { useState, useRef, useCallback } from "react";
 
-// Module-level cache persists across renders in the same session
 const imageCache = new Map<string, string | null>();
 
 export function CardHover({ name, children }: { name: string; children: React.ReactNode }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [visible, setVisible] = useState(false);
+  const [pos, setPos]           = useState({ x: 0, y: 0 });
+  const [visible, setVisible]   = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMove = useCallback((e: React.MouseEvent) => {
@@ -26,12 +25,10 @@ export function CardHover({ name, children }: { name: string; children: React.Re
         return;
       }
       try {
-        const res = await fetch(
-          `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`
-        );
+        const res  = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`);
         if (!res.ok) { imageCache.set(name, null); return; }
         const data = await res.json();
-        const url =
+        const url  =
           data.image_uris?.normal ??
           data.card_faces?.[0]?.image_uris?.normal ??
           null;
@@ -60,7 +57,7 @@ export function CardHover({ name, children }: { name: string; children: React.Re
         <img
           src={imageUrl}
           alt={name}
-          className="fixed z-50 pointer-events-none w-48 rounded-xl shadow-2xl border border-border"
+          className="fixed z-50 pointer-events-none w-52 rounded-xl shadow-2xl border border-border/60 animate-fade-in"
           style={{ left: pos.x, top: pos.y }}
         />
       )}
