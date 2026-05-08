@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Library, Wand2, Bookmark, LogOut } from "lucide-react";
+import Image from "next/image";
 
 const navItems = [
   { href: "/dashboard",  label: "Dashboard",      icon: LayoutDashboard },
@@ -31,15 +32,15 @@ export default function Nav() {
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
 
           <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="shrink-0" aria-hidden="true">
-                <path d="M11 1L21 11L11 21L1 11Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-                <path d="M11 5.5L16.5 11L11 16.5L5.5 11Z" fill="currentColor" opacity="0.3"/>
-                <circle cx="11" cy="11" r="1.5" fill="currentColor"/>
-              </svg>
-              <span className="font-bold text-base gradient-text hidden sm:block">
-                Magic Builder
-              </span>
+            <Link href="/dashboard" className="flex items-center shrink-0" title="Till Dashboard">
+              <Image
+                src="/images/MagicBuilderIcon.png"
+                alt="Magic Builder"
+                width={120}
+                height={80}
+                className="h-9 w-auto rounded-md object-contain transition-opacity hover:opacity-80"
+                priority
+              />
             </Link>
 
             <nav className="hidden sm:flex items-center gap-0.5">
