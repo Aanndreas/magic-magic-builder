@@ -11,7 +11,8 @@ export async function GET() {
     .from("collection_cards")
     .select("*")
     .eq("user_id", user.id)
-    .order("card_name");
+    .order("card_name")
+    .limit(10000);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);

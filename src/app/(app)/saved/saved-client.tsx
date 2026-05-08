@@ -8,15 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Trash2, ShoppingCart, Trophy, TrendingUp, ExternalLink } from "lucide-react";
 import type { SavedRecommendation } from "@/lib/supabase/types";
+import { useCurrency } from "@/contexts/currency-context";
 
 type DeckCard = { name: string; quantity: number; price_usd?: number };
-type Currency = "USD" | "SEK";
-const SEK_RATE = 10.5;
-
-function formatPrice(usd: number, currency: Currency): string {
-  if (currency === "SEK") return `${(usd * SEK_RATE).toFixed(0)} kr`;
-  return `$${usd.toFixed(2)}`;
-}
 
 function toCards(json: unknown): DeckCard[] {
   if (!Array.isArray(json)) return [];
@@ -28,8 +22,8 @@ interface Props {
 }
 
 export default function SavedClient({ initialSaved }: Props) {
+  const { formatPrice } = useCurrency();
   const [saved,    setSaved]    = useState(initialSaved);
-  const [currency, setCurrency] = useState<Currency>("USD");
   const [selected, setSelected] = useState<SavedRecommendation | null>(null);
 
   async function handleDelete(id: string) {
@@ -57,9 +51,6 @@ export default function SavedClient({ initialSaved }: Props) {
             <h2 className="text-xl font-bold">{selected.deck_name}</h2>
             <p className="text-muted-foreground text-xs capitalize">{selected.format}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setCurrency(currency === "USD" ? "SEK" : "USD")} className="text-xs">
-            {currency === "USD" ? "$ USD" : "kr SEK"}
-          </Button>
           <Button
             variant="ghost" size="sm"
             onClick={() => handleDelete(selected.id)}
@@ -75,12 +66,12 @@ export default function SavedClient({ initialSaved }: Props) {
             <div className="text-xs text-muted-foreground mt-1">Kort du har</div>
           </div>
           <div className="rounded-xl border border-border/60 bg-card p-4 text-center">
-            <div className="text-3xl font-bold text-primary">{formatPrice(budgetTotal, currency)}</div>
+            <div className="text-3xl font-bold text-primary">{formatPrice(budgetTotal)}</div>
             <div className="text-xs text-muted-foreground mt-1">Budget-uppgradering</div>
             <div className="text-xs mt-0.5">{budget.length} kort</div>
           </div>
           <div className="rounded-xl border border-border/60 bg-card p-4 text-center">
-            <div className="text-3xl font-bold">{formatPrice(fullTotal, currency)}</div>
+            <div className="text-3xl font-bold">{formatPrice(fullTotal)}</div>
             <div className="text-xs text-muted-foreground mt-1">Full netdeck</div>
             <div className="text-xs mt-0.5">{full.length} kort</div>
           </div>
@@ -89,23 +80,23 @@ export default function SavedClient({ initialSaved }: Props) {
         <Tabs defaultValue="budget">
           <TabsList className="grid w-full grid-cols-3 bg-muted/50">
             <TabsTrigger value="have" className="gap-1.5 text-xs">
-              <Trophy className="w-3.5 h-3.5" /> Har ({alreadyHave.length})
+              <Trophy className="w-3.5 h-3.5" /> Har: {alreadyHave.reduce((s,c)=>s+c.quantity,0)} kort ({alreadyHave.length} unika)
             </TabsTrigger>
             <TabsTrigger value="budget" className="gap-1.5 text-xs">
-              <TrendingUp className="w-3.5 h-3.5" /> Budget ({budget.length})
+              <TrendingUp className="w-3.5 h-3.5" /> Budget: {budget.length} kort
             </TabsTrigger>
             <TabsTrigger value="full" className="gap-1.5 text-xs">
-              <ShoppingCart className="w-3.5 h-3.5" /> Full ({full.length})
+              <ShoppingCart className="w-3.5 h-3.5" /> Fullständig: {full.length} kort
             </TabsTrigger>
           </TabsList>
           <TabsContent value="have" className="mt-4">
-            <CardList cards={alreadyHave} emptyText="Inga kort sparade." showPrice={false} currency={currency} />
+            <CardList cards={alreadyHave} emptyText="Inga kort sparade." showPrice={false} />
           </TabsContent>
           <TabsContent value="budget" className="mt-4">
-            <CardList cards={budget} emptyText="Inga budget-kort sparade." showPrice currency={currency} />
+            <CardList cards={budget} emptyText="Inga budget-kort sparade." showPrice />
           </TabsContent>
           <TabsContent value="full" className="mt-4">
-            <CardList cards={full} emptyText="Inga kort att köpa." showPrice currency={currency} />
+            <CardList cards={full} emptyText="Inga kort att köpa." showPrice />
           </TabsContent>
         </Tabs>
       </div>
@@ -114,19 +105,9 @@ export default function SavedClient({ initialSaved }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text">Sparade lekar</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Dina sparade lek-jämförelser</p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrency(currency === "USD" ? "SEK" : "USD")}
-          className="flex-shrink-0 mt-1 text-xs"
-        >
-          {currency === "USD" ? "$ USD" : "kr SEK"}
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold gradient-text">Sparade lekar</h1>
+        <p className="text-muted-foreground mt-1 text-sm">Dina sparade lek-jämförelser</p>
       </div>
 
       {saved.length === 0 ? (
@@ -152,7 +133,7 @@ export default function SavedClient({ initialSaved }: Props) {
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Budget-köp</span>
-                    <span className="font-semibold text-primary">{formatPrice(budgetTotal, currency)}</span>
+                    <span className="font-semibold text-primary">{formatPrice(budgetTotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Antal att köpa</span>
@@ -180,12 +161,13 @@ export default function SavedClient({ initialSaved }: Props) {
   );
 }
 
-function CardList({ cards, emptyText, showPrice, currency }: {
+function CardList({ cards, emptyText, showPrice }: {
   cards: DeckCard[];
   emptyText: string;
   showPrice: boolean;
-  currency: Currency;
 }) {
+  const { formatPrice } = useCurrency();
+
   if (cards.length === 0) return <p className="text-center py-8 text-muted-foreground text-sm">{emptyText}</p>;
 
   return (
@@ -199,7 +181,7 @@ function CardList({ cards, emptyText, showPrice, currency }: {
           <div className="flex items-center gap-2">
             {showPrice && card.price_usd !== undefined && (
               <span className="text-xs text-muted-foreground">
-                {formatPrice(card.price_usd * card.quantity, currency)}
+                {formatPrice(card.price_usd * card.quantity)}
               </span>
             )}
             {showPrice && (
@@ -221,7 +203,7 @@ function CardList({ cards, emptyText, showPrice, currency }: {
           <div className="flex justify-between px-4 py-2.5 font-semibold text-sm bg-muted/20">
             <span>Totalt</span>
             <span className="text-primary">
-              {formatPrice(cards.reduce((s, c) => s + (c.price_usd ?? 0) * c.quantity, 0), currency)}
+              {formatPrice(cards.reduce((s, c) => s + (c.price_usd ?? 0) * c.quantity, 0))}
             </span>
           </div>
         </>

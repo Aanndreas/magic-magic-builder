@@ -5,8 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Library, Wand2, Bookmark, LogOut } from "lucide-react";
+import { LayoutDashboard, Library, Wand2, Bookmark, LogOut, Sun, Moon, Monitor } from "lucide-react";
 import Image from "next/image";
+import { useTheme } from "next-themes";
+import { useCurrency } from "@/contexts/currency-context";
 
 const navItems = [
   { href: "/dashboard",  label: "Dashboard",      icon: LayoutDashboard },
@@ -19,6 +21,8 @@ export default function Nav() {
   const pathname = usePathname();
   const router   = useRouter();
   const supabase = createClient();
+  const { theme, setTheme } = useTheme();
+  const { currency, setCurrency } = useCurrency();
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -63,6 +67,30 @@ export default function Nav() {
                 );
               })}
             </nav>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrency(currency === "SEK" ? "USD" : "SEK")}
+              className="text-muted-foreground hover:text-foreground text-xs font-medium w-14"
+            >
+              {currency === "SEK" ? "kr SEK" : "$ USD"}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-8 h-8 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                if (theme === "system") setTheme("light");
+                else if (theme === "light") setTheme("dark");
+                else setTheme("system");
+              }}
+            >
+              {theme === "light" ? <Sun className="w-4 h-4" /> : theme === "dark" ? <Moon className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
+            </Button>
           </div>
 
           <Button

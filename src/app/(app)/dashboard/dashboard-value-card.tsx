@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DollarSign } from "lucide-react";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface ValueData {
   totalValue: number;
@@ -9,6 +10,7 @@ interface ValueData {
 }
 
 export default function DashboardValueCard({ hasCards }: { hasCards: boolean }) {
+  const { formatPrice } = useCurrency();
   const [data, setData] = useState<ValueData | null>(null);
 
   useEffect(() => {
@@ -36,8 +38,8 @@ export default function DashboardValueCard({ hasCards }: { hasCards: boolean }) 
         </>
       ) : data ? (
         <>
-          <div className="text-4xl font-black tabular-nums text-primary">${data.totalValue.toFixed(0)}</div>
-          <div className="text-xs text-muted-foreground mt-0.5">USD · Scryfall-priser</div>
+          <div className="text-4xl font-black tabular-nums text-primary">{formatPrice(data.totalValue)}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">Scryfall-priser</div>
         </>
       ) : (
         <>

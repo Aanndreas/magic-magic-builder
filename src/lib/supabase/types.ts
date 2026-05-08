@@ -21,6 +21,7 @@ export type Database = {
           foil: boolean;
           set_code: string | null;
           collector_number: string | null;
+          price_usd: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -88,6 +89,13 @@ export interface DeckRecommendation {
     cards: DeckCard[];
     totalCost: number;
     newCoveragePercent: number;
+    threshold: number;
+  };
+  mediumUpgrade: {
+    cards: DeckCard[];
+    totalCost: number;
+    newCoveragePercent: number;
+    threshold: number;
   };
   fullNetdeck: {
     cards: DeckCard[];

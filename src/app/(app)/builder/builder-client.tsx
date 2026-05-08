@@ -15,6 +15,8 @@ import { Search, TrendingUp, ShoppingCart, Trophy, ExternalLink } from "lucide-r
 import ThemeBuilderClient from "./theme-builder-client";
 import { CardHover } from "@/components/card-hover";
 import CommanderBuilderClient from "./commander-builder-client";
+import { useCurrency } from "@/contexts/currency-context";
+import { getDeckColors, isBasicLand } from "@/lib/deck-engine";
 
 const FORMAT_LABELS: Record<string, string> = {
   commander: "Commander",
@@ -32,15 +34,7 @@ const THEME_SUGGESTIONS: Record<string, string[]> = {
   pauper:    ["Faeries", "Burn", "Stompy", "Flickers", "Elves", "Goblins"],
 };
 
-const SEK_RATE = 10.5;
-
 type SortKey = "coverage" | "budgetCost" | "popularity";
-type Currency = "USD" | "SEK";
-
-function formatPrice(usd: number, currency: Currency): string {
-  if (currency === "SEK") return `${(usd * SEK_RATE).toFixed(0)} kr`;
-  return `$${usd.toFixed(2)}`;
-}
 
 function coverageColor(pct: number) {
   if (pct >= 70) return "text-emerald-400";
@@ -80,12 +74,12 @@ function formatBadgeClass(format: string): string {
 }
 
 export default function BuilderClient() {
+  const { formatPrice } = useCurrency();
   const [format,          setFormat]          = useState<MTGFormat>("commander");
   const [search,          setSearch]          = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedRec,     setSelectedRec]     = useState<DeckRecommendation | null>(null);
   const [sortKey,         setSortKey]         = useState<SortKey>("coverage");
-  const [currency,        setCurrency]        = useState<Currency>("USD");
 
   const { data: recommendations, isLoading, error } = useQuery<DeckRecommendation[]>({
     queryKey: ["recommendations", format, debouncedSearch],
@@ -135,21 +129,11 @@ export default function BuilderClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text">Lek-byggaren</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Jämför din samling mot meta-lekar och se vad du behöver köpa
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setCurrency(currency === "USD" ? "SEK" : "USD")}
-          className="flex-shrink-0 mt-1 text-xs"
-        >
-          {currency === "USD" ? "$ USD" : "kr SEK"}
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold gradient-text">Lek-byggaren</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Jämför din samling mot meta-lekar och se vad du behöver köpa
+        </p>
       </div>
 
       <Tabs defaultValue="meta">
@@ -261,6 +245,24 @@ export default function BuilderClient() {
                     <span className="text-xs text-muted-foreground">{rec.metaDeck.source}</span>
                   </div>
 
+                  {(() => {
+                    const colors = getDeckColors(rec.metaDeck.deck_name, rec.metaDeck.archetype ?? "");
+                    const colorStyle: Record<string, string> = {
+                      W: "bg-yellow-100 border-yellow-300",
+                      U: "bg-blue-500 border-blue-600",
+                      B: "bg-gray-800 border-gray-600",
+                      R: "bg-red-500 border-red-600",
+                      G: "bg-green-600 border-green-700",
+                    };
+                    return colors.length > 0 ? (
+                      <div className="flex gap-1">
+                        {colors.map(c => (
+                          <div key={c} className={`w-3.5 h-3.5 rounded-full border ${colorStyle[c] ?? "bg-muted"}`} title={c} />
+                        ))}
+                      </div>
+                    ) : null;
+                  })()}
+
                   <div className="space-y-1">
                     <Progress value={rec.coveragePercent} className="h-2" />
                     <div className="flex justify-between text-xs text-muted-foreground">
@@ -271,10 +273,10 @@ export default function BuilderClient() {
 
                   <div className="flex gap-3 text-xs pt-0.5">
                     <span className="text-primary font-medium">
-                      Budget: {formatPrice(rec.budgetUpgrade.totalCost, currency)}
+                      Budget: {formatPrice(rec.budgetUpgrade.totalCost)}
                     </span>
                     <span className="text-muted-foreground">
-                      Full: {formatPrice(rec.fullNetdeck.totalCost, currency)}
+                      Full: {formatPrice(rec.fullNetdeck.totalCost)}
                     </span>
                   </div>
                 </div>
@@ -287,7 +289,6 @@ export default function BuilderClient() {
               rec={selectedRec}
               onBack={() => setSelectedRec(null)}
               onSave={handleSaveRec}
-              currency={currency}
             />
           )}
         </TabsContent>
@@ -308,15 +309,19 @@ function RecommendationDetail({
   rec,
   onBack,
   onSave,
-  currency,
 }: {
   rec: DeckRecommendation;
   onBack: () => void;
   onSave: (rec: DeckRecommendation) => Promise<void>;
-  currency: Currency;
 }) {
+  const { formatPrice } = useCurrency();
   const [saving, setSaving] = useState(false);
   const [saved,  setSaved]  = useState(false);
+  const [includeLands, setIncludeLands] = useState(true);
+
+  const displayHave   = includeLands ? rec.alreadyHave       : rec.alreadyHave.filter(c => !isBasicLand(c.name));
+  const displayBudget = includeLands ? rec.budgetUpgrade.cards : rec.budgetUpgrade.cards.filter(c => !isBasicLand(c.name));
+  const displayFull   = includeLands ? rec.fullNetdeck.cards  : rec.fullNetdeck.cards.filter(c => !isBasicLand(c.name));
 
   async function handleSave() {
     setSaving(true);
@@ -355,64 +360,77 @@ function RecommendationDetail({
         <div className="rounded-xl border border-border/60 bg-card p-4 text-center">
           <div className={`text-3xl font-bold ${coverageColor(rec.coveragePercent)}`}>{rec.coveragePercent}%</div>
           <div className="text-xs text-muted-foreground mt-1">Täckning</div>
-          <div className="text-xs mt-0.5">{rec.alreadyHaveCount}/{rec.totalCards} kort</div>
+          <div className="text-xs mt-0.5">
+            {rec.alreadyHaveCount} kort ({rec.alreadyHave.length} unika)
+          </div>
         </div>
         <div className="rounded-xl border border-border/60 bg-card p-4 text-center">
-          <div className="text-3xl font-bold text-primary">{formatPrice(rec.budgetUpgrade.totalCost, currency)}</div>
+          <div className="text-3xl font-bold text-primary">{formatPrice(rec.budgetUpgrade.totalCost)}</div>
           <div className="text-xs text-muted-foreground mt-1">Budget-uppgradering</div>
           <div className="text-xs mt-0.5">→ {rec.budgetUpgrade.newCoveragePercent}% täckning</div>
         </div>
         <div className="rounded-xl border border-border/60 bg-card p-4 text-center">
-          <div className="text-3xl font-bold">{formatPrice(rec.fullNetdeck.totalCost, currency)}</div>
+          <div className="text-3xl font-bold">{formatPrice(rec.fullNetdeck.totalCost)}</div>
           <div className="text-xs text-muted-foreground mt-1">Full netdeck</div>
           <div className="text-xs mt-0.5">{rec.fullNetdeck.cards.length} saknade kort</div>
         </div>
       </div>
 
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <button
+          onClick={() => setIncludeLands(!includeLands)}
+          className={`w-8 h-4 rounded-full transition-colors relative ${includeLands ? "bg-primary" : "bg-muted"}`}
+        >
+          <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${includeLands ? "translate-x-4" : "translate-x-0.5"}`} />
+        </button>
+        <span>Inkludera basic lands</span>
+      </div>
+
       <Tabs defaultValue="have">
         <TabsList className="grid w-full grid-cols-3 bg-muted/50">
           <TabsTrigger value="have" className="gap-1.5 text-xs">
-            <Trophy className="w-3.5 h-3.5" /> Har ({rec.alreadyHave.length})
+            <Trophy className="w-3.5 h-3.5" /> Har: {rec.alreadyHaveCount} kort ({rec.alreadyHave.length} unika)
           </TabsTrigger>
           <TabsTrigger value="budget" className="gap-1.5 text-xs">
-            <TrendingUp className="w-3.5 h-3.5" /> Budget ({rec.budgetUpgrade.cards.length})
+            <TrendingUp className="w-3.5 h-3.5" /> Budget: {rec.budgetUpgrade.cards.length} kort
           </TabsTrigger>
           <TabsTrigger value="full" className="gap-1.5 text-xs">
-            <ShoppingCart className="w-3.5 h-3.5" /> Full ({rec.fullNetdeck.cards.length})
+            <ShoppingCart className="w-3.5 h-3.5" /> Fullständig: {rec.fullNetdeck.cards.length} kort
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="have" className="mt-4">
-          <CardList cards={rec.alreadyHave} emptyText="Du saknar alla kort i den här leken." showPrice={false} currency={currency} />
+          <CardList cards={displayHave} emptyText="Du saknar alla kort i den här leken." showPrice={false} />
         </TabsContent>
         <TabsContent value="budget" className="mt-4">
           <div className="mb-3 px-3 py-2.5 bg-primary/8 border border-primary/20 rounded-lg text-xs text-muted-foreground">
             Dessa kort kostar{" "}
-            <strong className="text-primary">{formatPrice(rec.budgetUpgrade.totalCost, currency)}</strong>{" "}
+            <strong className="text-primary">{formatPrice(rec.budgetUpgrade.totalCost)}</strong>{" "}
             och ökar täckningen från{" "}
             <strong>{rec.coveragePercent}%</strong> till{" "}
             <strong className="text-primary">{rec.budgetUpgrade.newCoveragePercent}%</strong>.
           </div>
-          <CardList cards={rec.budgetUpgrade.cards} emptyText="Inga billiga uppgraderingar tillgängliga." showPrice currency={currency} />
+          <CardList cards={displayBudget} emptyText="Inga billiga uppgraderingar tillgängliga." showPrice />
         </TabsContent>
         <TabsContent value="full" className="mt-4">
           <div className="mb-3 px-3 py-2.5 bg-muted/40 border border-border/60 rounded-lg text-xs text-muted-foreground">
             Köp alla <strong>{rec.fullNetdeck.cards.length} kort</strong> för att kopiera leken exakt.
-            Total: <strong>{formatPrice(rec.fullNetdeck.totalCost, currency)}</strong>.
+            Total: <strong>{formatPrice(rec.fullNetdeck.totalCost)}</strong>.
           </div>
-          <CardList cards={rec.fullNetdeck.cards} emptyText="Du har alla kort! Leken är klar." showPrice currency={currency} />
+          <CardList cards={displayFull} emptyText="Du har alla kort! Leken är klar." showPrice />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function CardList({ cards, emptyText, showPrice, currency }: {
+function CardList({ cards, emptyText, showPrice }: {
   cards: Array<{ name: string; quantity: number; price_usd?: number }>;
   emptyText: string;
   showPrice: boolean;
-  currency: Currency;
 }) {
+  const { formatPrice } = useCurrency();
+
   if (cards.length === 0) return <p className="text-center py-8 text-muted-foreground text-sm">{emptyText}</p>;
 
   return (
@@ -430,7 +448,7 @@ function CardList({ cards, emptyText, showPrice, currency }: {
           <div className="flex items-center gap-2">
             {showPrice && card.price_usd !== undefined && (
               <span className="text-xs text-muted-foreground">
-                {formatPrice(card.price_usd * card.quantity, currency)}
+                {formatPrice(card.price_usd * card.quantity)}
               </span>
             )}
             {showPrice && (
@@ -454,7 +472,7 @@ function CardList({ cards, emptyText, showPrice, currency }: {
           <div className="flex justify-between px-4 py-2.5 font-semibold text-sm bg-muted/20">
             <span>Totalt</span>
             <span className="text-primary">
-              {formatPrice(cards.reduce((s, c) => s + (c.price_usd ?? 0) * c.quantity, 0), currency)}
+              {formatPrice(cards.reduce((s, c) => s + (c.price_usd ?? 0) * c.quantity, 0))}
             </span>
           </div>
         </>

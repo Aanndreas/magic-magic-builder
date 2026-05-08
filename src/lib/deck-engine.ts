@@ -1,9 +1,46 @@
 import type { CollectionCard, DeckCard, DeckRecommendation, MetaDeck } from "@/lib/supabase/types";
 import { getCardsByNames } from "@/lib/scryfall";
 
+const BASIC_LANDS = new Set([
+  "plains", "island", "swamp", "mountain", "forest",
+  "snow-covered plains", "snow-covered island", "snow-covered swamp",
+  "snow-covered mountain", "snow-covered forest", "wastes",
+]);
+
+export function isBasicLand(name: string): boolean {
+  return BASIC_LANDS.has(name.toLowerCase());
+}
+
+const COLOR_MAP: Record<string, string[]> = {
+  azorius: ["W","U"], dimir: ["U","B"], rakdos: ["B","R"],
+  gruul: ["R","G"], selesnya: ["G","W"], orzhov: ["W","B"],
+  izzet: ["U","R"], golgari: ["B","G"], boros: ["R","W"], simic: ["G","U"],
+  esper: ["W","U","B"], grixis: ["U","B","R"], jund: ["B","R","G"],
+  naya: ["R","G","W"], bant: ["G","W","U"], abzan: ["W","B","G"],
+  jeskai: ["U","R","W"], sultai: ["B","G","U"], mardu: ["R","W","B"],
+  temur: ["G","U","R"],
+};
+
+export function getDeckColors(deckName: string, archetype: string): string[] {
+  const text = `${deckName} ${archetype}`.toLowerCase();
+  if (text.includes("five") || text.includes("rainbow") || text.includes("wubrg")) {
+    return ["W","U","B","R","G"];
+  }
+  for (const [keyword, colors] of Object.entries(COLOR_MAP)) {
+    if (text.includes(keyword)) return colors;
+  }
+  if (text.includes("white")) return ["W"];
+  if (text.includes("blue")) return ["U"];
+  if (text.includes("black")) return ["B"];
+  if (text.includes("red")) return ["R"];
+  if (text.includes("green")) return ["G"];
+  return [];
+}
+
 export async function buildRecommendation(
   metaDeck: MetaDeck,
-  collection: CollectionCard[]
+  collection: CollectionCard[],
+  includeLands = true
 ): Promise<DeckRecommendation> {
   const deckCards = metaDeck.cards as unknown as DeckCard[];
   const collectionMap = new Map<string, number>();
@@ -11,13 +48,17 @@ export async function buildRecommendation(
     collectionMap.set(card.card_name.toLowerCase(), card.quantity);
   }
 
-  const allCardNames = deckCards.map((c) => c.name);
+  const filteredDeckCards = includeLands
+    ? deckCards
+    : deckCards.filter(c => !isBasicLand(c.name));
+
+  const allCardNames = filteredDeckCards.map((c) => c.name);
   const scryfallData = await getCardsByNames(allCardNames);
 
   const alreadyHave: DeckCard[] = [];
   const missing: DeckCard[] = [];
 
-  for (const card of deckCards) {
+  for (const card of filteredDeckCards) {
     const owned = collectionMap.get(card.name.toLowerCase()) ?? 0;
     const scryfallCard = scryfallData.get(card.name.toLowerCase());
     const price = scryfallCard
@@ -44,30 +85,31 @@ export async function buildRecommendation(
     }
   }
 
-  // Budget upgrade: missing cards sorted by price ascending, up to ~30 USD
-  const missingByPrice = [...missing].sort(
-    (a, b) => (a.price_usd ?? 0) - (b.price_usd ?? 0)
-  );
-
-  const budgetCards: DeckCard[] = [];
-  let budgetTotal = 0;
-  let coverageAfterBudget = alreadyHave.reduce((s, c) => s + c.quantity, 0);
-
-  for (const card of missingByPrice) {
-    const cardCost = (card.price_usd ?? 0) * card.quantity;
-    if (budgetTotal + cardCost <= 30) {
-      budgetCards.push(card);
-      budgetTotal += cardCost;
-      coverageAfterBudget += card.quantity;
-    }
-  }
-
-  const totalCards = deckCards.reduce((s, c) => s + c.quantity, 0);
+  const totalCards = filteredDeckCards.reduce((s, c) => s + c.quantity, 0);
   const alreadyHaveCount = alreadyHave.reduce((s, c) => s + c.quantity, 0);
   const fullNetdeckCost = missing.reduce(
     (s, c) => s + (c.price_usd ?? 0) * c.quantity,
     0
   );
+
+  const missingByPrice = [...missing].sort(
+    (a, b) => (a.price_usd ?? 0) - (b.price_usd ?? 0)
+  );
+
+  const mediumThreshold = Math.max(10, fullNetdeckCost * 0.35);
+
+  const mediumCards: DeckCard[] = [];
+  let mediumTotal = 0;
+  let coverageAfterMedium = alreadyHaveCount;
+
+  for (const card of missingByPrice) {
+    const cardCost = (card.price_usd ?? 0) * card.quantity;
+    if (mediumTotal + cardCost <= mediumThreshold) {
+      mediumCards.push(card);
+      mediumTotal += cardCost;
+      coverageAfterMedium += card.quantity;
+    }
+  }
 
   return {
     metaDeck,
@@ -76,9 +118,16 @@ export async function buildRecommendation(
     totalCards,
     coveragePercent: Math.round((alreadyHaveCount / totalCards) * 100),
     budgetUpgrade: {
-      cards: budgetCards,
-      totalCost: budgetTotal,
-      newCoveragePercent: Math.round((coverageAfterBudget / totalCards) * 100),
+      cards: mediumCards,
+      totalCost: mediumTotal,
+      newCoveragePercent: Math.round((coverageAfterMedium / totalCards) * 100),
+      threshold: mediumThreshold,
+    },
+    mediumUpgrade: {
+      cards: mediumCards,
+      totalCost: mediumTotal,
+      newCoveragePercent: Math.round((coverageAfterMedium / totalCards) * 100),
+      threshold: mediumThreshold,
     },
     fullNetdeck: {
       cards: missing,

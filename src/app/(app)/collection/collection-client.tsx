@@ -8,9 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CollectionCard } from "@/lib/supabase/types";
 import { toast } from "sonner";
 import { Trash2, Upload, Plus, Search, AlertTriangle, Library } from "lucide-react";
+import { useCurrency } from "@/contexts/currency-context";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,7 @@ interface Props {
 export default function CollectionClient({ initialCards }: Props) {
   const [cards,          setCards]          = useState(initialCards);
   const [search,         setSearch]         = useState("");
+  const [sortBy,         setSortBy]         = useState<"name" | "quantity_desc" | "quantity_asc" | "price_desc" | "price_asc" | "set">("name");
   const [newCardName,    setNewCardName]    = useState("");
   const [newCardQty,     setNewCardQty]     = useState(1);
   const [addingCard,     setAddingCard]     = useState(false);
@@ -37,10 +40,22 @@ export default function CollectionClient({ initialCards }: Props) {
   const [clearing,       setClearing]       = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const qc      = useQueryClient();
+  const { formatPrice } = useCurrency();
 
   const filtered = cards.filter((c) =>
     c.card_name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "quantity_desc": return b.quantity - a.quantity;
+      case "quantity_asc":  return a.quantity - b.quantity;
+      case "price_desc":    return (b.price_usd ?? 0) - (a.price_usd ?? 0);
+      case "price_asc":     return (a.price_usd ?? 0) - (b.price_usd ?? 0);
+      case "set":           return (a.set_code ?? "").localeCompare(b.set_code ?? "");
+      default:              return a.card_name.localeCompare(b.card_name);
+    }
+  });
 
   async function handleAddCard(e: React.FormEvent) {
     e.preventDefault();
@@ -199,14 +214,29 @@ export default function CollectionClient({ initialCards }: Props) {
         </TabsList>
 
         <TabsContent value="list" className="space-y-4 mt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Sök efter kort..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-card/60"
-            />
+          <div className="flex gap-2">
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger className="w-52 bg-card/60 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Namn (A–Ö)</SelectItem>
+                <SelectItem value="quantity_desc">Antal (flest)</SelectItem>
+                <SelectItem value="quantity_asc">Antal (minst)</SelectItem>
+                <SelectItem value="price_desc">Pris (dyrast)</SelectItem>
+                <SelectItem value="price_asc">Pris (billigast)</SelectItem>
+                <SelectItem value="set">Set (A–Ö)</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Sök efter kort..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 bg-card/60"
+              />
+            </div>
           </div>
 
           {filtered.length === 0 ? (
@@ -237,11 +267,12 @@ export default function CollectionClient({ initialCards }: Props) {
                     <TableHead className="text-xs text-muted-foreground uppercase tracking-wide">Kortnamn</TableHead>
                     <TableHead className="w-20 text-center text-xs text-muted-foreground uppercase tracking-wide">Antal</TableHead>
                     <TableHead className="w-24 text-xs text-muted-foreground uppercase tracking-wide">Set</TableHead>
+                    <TableHead className="w-24 text-right text-xs text-muted-foreground uppercase tracking-wide">Pris</TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((card) => (
+                  {sorted.map((card) => (
                     <TableRow key={card.id} className="border-border/30 hover:bg-accent/20 transition-colors">
                       <TableCell className="font-medium text-sm py-2.5">
                         {card.card_name}
@@ -253,6 +284,13 @@ export default function CollectionClient({ initialCards }: Props) {
                       </TableCell>
                       <TableCell className="text-center text-sm py-2.5">{card.quantity}</TableCell>
                       <TableCell className="text-muted-foreground uppercase text-xs py-2.5">{card.set_code}</TableCell>
+                      <TableCell className="text-right text-xs py-2.5 tabular-nums">
+                        {card.price_usd ? (
+                          <span className="text-muted-foreground">{formatPrice(card.price_usd)}</span>
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="py-2.5">
                         <Button
                           variant="ghost"
@@ -267,6 +305,14 @@ export default function CollectionClient({ initialCards }: Props) {
                   ))}
                 </TableBody>
               </Table>
+              {filtered.length > 0 && (
+                <div className="flex justify-between items-center px-4 py-2.5 border-t border-border/40 bg-muted/20 text-xs">
+                  <span className="text-muted-foreground">{filtered.length} kort visas</span>
+                  <span className="font-semibold">
+                    Totalt: {formatPrice(filtered.reduce((s, c) => s + (c.price_usd ?? 0) * c.quantity, 0))}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </TabsContent>

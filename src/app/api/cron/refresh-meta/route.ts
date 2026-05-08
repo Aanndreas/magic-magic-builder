@@ -78,5 +78,32 @@ export async function GET(request: Request) {
     results.errors++;
   }
 
+  const { data: collectionCards } = await supabase
+    .from("collection_cards")
+    .select("id, card_name, scryfall_id")
+    .limit(5000);
+
+  if (collectionCards && collectionCards.length > 0) {
+    const uniqueNames = [...new Set(collectionCards.map((c) => c.card_name))];
+    const { getCardsByNames } = await import("@/lib/scryfall");
+    const batches: string[][] = [];
+    for (let i = 0; i < uniqueNames.length; i += 75) {
+      batches.push(uniqueNames.slice(i, i + 75));
+    }
+    for (const batch of batches) {
+      const scryfallData = await getCardsByNames(batch);
+      const updates = collectionCards
+        .filter((c) => scryfallData.has(c.card_name.toLowerCase()))
+        .map((c) => ({
+          id: c.id,
+          price_usd: parseFloat(scryfallData.get(c.card_name.toLowerCase())?.prices?.usd ?? "0") || null,
+        }));
+      for (const update of updates) {
+        await supabase.from("collection_cards").update({ price_usd: update.price_usd }).eq("id", update.id);
+      }
+      await new Promise((r) => setTimeout(r, 300));
+    }
+  }
+
   return Response.json({ ...results, refreshed_at: new Date().toISOString() });
 }

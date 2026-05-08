@@ -59,10 +59,14 @@ export async function POST(request: Request) {
     }
   }
 
-  const rows = Array.from(rowMap.values()).map((card) => ({
-    user_id: user.id,
-    ...card,
-  }));
+  const rows = Array.from(rowMap.values()).map((card) => {
+    const scryfall = idMap.get(card.scryfall_id) ?? nameMap.get(card.card_name.toLowerCase());
+    return {
+      user_id: user.id,
+      ...card,
+      price_usd: parseFloat(scryfall?.prices?.usd ?? "0") || null,
+    };
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase
