@@ -42,12 +42,15 @@ export default async function DashboardPage() {
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {/* Unique cards */}
-        <div className="rounded-xl border border-border/60 border-t-2 border-t-primary/50 bg-card p-4 space-y-1">
+        <div className="rounded-xl border border-border/60 border-t-4 border-t-primary/70 bg-card p-4 space-y-1 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-primary/6 blur-2xl -translate-y-6 translate-x-6" />
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Unika kort</span>
-            <Library className="w-4 h-4 text-primary/60" />
+            <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+              <Library className="w-4.5 h-4.5 text-primary" />
+            </div>
           </div>
-          <div className="text-3xl font-bold">{uniqueCards ?? 0}</div>
+          <div className="text-4xl font-black tabular-nums">{uniqueCards ?? 0}</div>
           <div className="text-xs text-muted-foreground">{totalQuantity} totalt i samlingen</div>
         </div>
 
@@ -55,12 +58,15 @@ export default async function DashboardPage() {
         <DashboardValueCard hasCards={hasCards} />
 
         {/* Meta decks */}
-        <div className="rounded-xl border border-border/60 border-t-2 border-t-purple-500/50 bg-card p-4 space-y-1">
+        <div className="rounded-xl border border-border/60 border-t-4 border-t-purple-500/70 bg-card p-4 space-y-1 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-purple-500/8 blur-2xl -translate-y-6 translate-x-6" />
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Meta-lekar</span>
-            <TrendingUp className="w-4 h-4 text-purple-400/60" />
+            <div className="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center">
+              <TrendingUp className="w-4.5 h-4.5 text-purple-400" />
+            </div>
           </div>
-          <div className="text-3xl font-bold">{metaDeckCount ?? 0}</div>
+          <div className="text-4xl font-black tabular-nums">{metaDeckCount ?? 0}</div>
           {latestMeta && (
             <div className="text-xs text-muted-foreground">
               Uppdaterad {new Date(latestMeta.fetched_at).toLocaleDateString("sv-SE")}
@@ -69,10 +75,13 @@ export default async function DashboardPage() {
         </div>
 
         {/* Formats */}
-        <div className="rounded-xl border border-border/60 border-t-2 border-t-blue-500/50 bg-card p-4">
+        <div className="rounded-xl border border-border/60 border-t-4 border-t-blue-500/70 bg-card p-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-blue-500/8 blur-2xl -translate-y-6 translate-x-6" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Format</span>
-            <Star className="w-4 h-4 text-blue-400/60" />
+            <div className="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center">
+              <Star className="w-4.5 h-4.5 text-blue-400" />
+            </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {formats.map((f) => (
@@ -124,7 +133,7 @@ export default async function DashboardPage() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Link href="/collection">
-            <div className="group rounded-xl border border-border/60 bg-card p-5 cursor-pointer card-hover-glow transition-all duration-200 h-full">
+            <div className="group rounded-xl border border-border/60 hover:border-primary/30 bg-card p-5 cursor-pointer card-hover-glow transition-all duration-200 h-full">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Layers className="w-4 h-4 text-primary" />
@@ -142,8 +151,8 @@ export default async function DashboardPage() {
           <Link href="/builder">
             <div className="group rounded-xl border border-border/60 bg-card p-5 cursor-pointer card-hover-glow transition-all duration-200 h-full">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-purple-400" />
                 </div>
                 <p className="font-semibold text-sm">Meta-lekar</p>
               </div>
@@ -156,8 +165,8 @@ export default async function DashboardPage() {
           <Link href="/builder">
             <div className="group rounded-xl border border-border/60 bg-card p-5 cursor-pointer card-hover-glow transition-all duration-200 h-full">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Wand2 className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Wand2 className="w-4 h-4 text-amber-400" />
                 </div>
                 <p className="font-semibold text-sm">Commander-lek</p>
               </div>

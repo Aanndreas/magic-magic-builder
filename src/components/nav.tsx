@@ -26,49 +26,83 @@ export default function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+    <>
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
 
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-            <span className="text-xl">🃏</span>
-            <span className="font-bold text-base gradient-text hidden sm:block">
-              Magic Builder
-            </span>
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="shrink-0" aria-hidden="true">
+                <path d="M11 1L21 11L11 21L1 11Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M11 5.5L16.5 11L11 16.5L5.5 11Z" fill="currentColor" opacity="0.3"/>
+                <circle cx="11" cy="11" r="1.5" fill="currentColor"/>
+              </svg>
+              <span className="font-bold text-base gradient-text hidden sm:block">
+                Magic Builder
+              </span>
+            </Link>
 
-          <nav className="hidden sm:flex items-center gap-0.5">
-            {navItems.map(({ href, label, icon: Icon }) => {
-              const active = pathname.startsWith(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150",
-                    active
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
-                  )}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+            <nav className="hidden sm:flex items-center gap-0.5">
+              {navItems.map(({ href, label, icon: Icon }) => {
+                const active = pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150",
+                      active
+                        ? "text-primary bg-primary/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="text-muted-foreground hover:text-foreground gap-1.5"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Logga ut</span>
+          </Button>
         </div>
+      </header>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLogout}
-          className="text-muted-foreground hover:text-foreground gap-1.5"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Logga ut</span>
-        </Button>
-      </div>
-    </header>
+      <nav
+        className="fixed bottom-0 inset-x-0 z-50 sm:hidden border-t border-border/60 bg-background/90 backdrop-blur-md"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="flex items-stretch">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 transition-colors",
+                  active
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                )}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="text-[9px] font-medium uppercase tracking-wider leading-none">
+                  {label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }

@@ -9,7 +9,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
+  --font-display: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -152,6 +153,34 @@
 }
 .animate-spin-slow { animation: spin-slow 1.6s linear infinite; }
 
+@keyframes foil-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.foil-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.70 0.18 290) 0%,
+    oklch(0.78 0.22 195) 20%,
+    oklch(0.74 0.20 148) 40%,
+    oklch(0.78 0.18 75)  60%,
+    oklch(0.72 0.22 22)  80%,
+    oklch(0.70 0.18 290) 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: foil-shimmer 2.5s linear infinite;
+  color: oklch(0.98 0 0) !important;
+  border-color: transparent !important;
+}
+
+/* MTG format colors */
+.format-badge-commander { background: oklch(0.25 0.05 290 / 0.85); color: oklch(0.82 0.12 290); border-color: oklch(0.50 0.12 290 / 0.5); }
+.format-badge-standard  { background: oklch(0.20 0.06 250 / 0.85); color: oklch(0.78 0.14 250); border-color: oklch(0.48 0.12 250 / 0.5); }
+.format-badge-pioneer   { background: oklch(0.20 0.05 195 / 0.85); color: oklch(0.76 0.14 195); border-color: oklch(0.46 0.12 195 / 0.5); }
+.format-badge-modern    { background: oklch(0.20 0.05 148 / 0.85); color: oklch(0.74 0.14 148); border-color: oklch(0.44 0.12 148 / 0.5); }
+.format-badge-pauper    { background: oklch(0.20 0.04 75  / 0.85); color: oklch(0.82 0.12 75);  border-color: oklch(0.52 0.12 75  / 0.5); }
+
 /* Skeleton shimmer */
 .skeleton {
   background: linear-gradient(
@@ -203,12 +232,18 @@
   }
 }
 
+.font-display {
+  font-family: var(--font-display, "Cinzel", serif);
+  letter-spacing: 0.04em;
+}
+
 /* ─── Gradient text utility ───────────────────────────────── */
 .gradient-text {
   background: linear-gradient(135deg, oklch(0.85 0.12 75) 0%, oklch(0.75 0.10 45) 50%, oklch(0.80 0.14 85) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-family: var(--font-display, "Cinzel", serif);
 }
 
 /* Gold glow on primary buttons */
@@ -226,4 +261,43 @@
 .dark .glass {
   background: oklch(0.17 0.022 268 / 0.80);
   backdrop-filter: blur(8px);
+}
+
+@keyframes foil-shimmer {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.badge-foil {
+  background: linear-gradient(
+    90deg,
+    oklch(0.92 0.08 280),
+    oklch(0.88 0.14 200),
+    oklch(0.90 0.12 120),
+    oklch(0.92 0.10 60),
+    oklch(0.88 0.14 330),
+    oklch(0.92 0.08 280)
+  );
+  background-size: 200% 100%;
+  animation: foil-shimmer 2.5s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-color: oklch(0.76 0.14 75 / 0.5) !important;
+}
+
+/* MTG format badge colors — apply via inline className on Badge */
+/* commander: bg-purple-500/15 text-purple-300 border-purple-500/30 */
+/* standard:  bg-blue-500/15 text-blue-300 border-blue-500/30 */
+/* pioneer:   bg-green-500/15 text-green-300 border-green-500/30 */
+/* modern:    bg-red-500/15 text-red-300 border-red-500/30 */
+/* pauper:    bg-yellow-500/15 text-yellow-300 border-yellow-500/30 */
+
+.gradient-text-display {
+  font-family: var(--font-display, "Cinzel", serif);
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, oklch(0.90 0.14 75) 0%, oklch(0.78 0.12 45) 40%, oklch(0.85 0.16 85) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

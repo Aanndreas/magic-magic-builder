@@ -40,7 +40,15 @@ export default function LoginPage() {
       <div className="w-full max-w-sm animate-fade-up relative">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🃏</div>
+          <div className="flex justify-center mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+              <svg width="32" height="32" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+                <path d="M11 1L21 11L11 21L1 11Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M11 5.5L16.5 11L11 16.5L5.5 11Z" fill="currentColor" opacity="0.4"/>
+                <circle cx="11" cy="11" r="1.5" fill="currentColor"/>
+              </svg>
+            </div>
+          </div>
           <h1 className="text-2xl font-bold gradient-text">Magic Builder</h1>
           <p className="text-muted-foreground text-sm mt-1">Logga in för att hantera din kortsamling</p>
         </div>

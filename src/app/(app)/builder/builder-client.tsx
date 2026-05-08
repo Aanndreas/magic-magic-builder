@@ -68,6 +68,17 @@ function DeckCardSkeleton() {
   );
 }
 
+function formatBadgeClass(format: string): string {
+  const map: Record<string, string> = {
+    commander: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+    standard:  "bg-blue-500/15 text-blue-300 border-blue-500/30",
+    pioneer:   "bg-green-500/15 text-green-300 border-green-500/30",
+    modern:    "bg-red-500/15 text-red-300 border-red-500/30",
+    pauper:    "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
+  };
+  return map[format.toLowerCase()] ?? "bg-muted/50 text-muted-foreground border-border/40";
+}
+
 export default function BuilderClient() {
   const [format,          setFormat]          = useState<MTGFormat>("commander");
   const [search,          setSearch]          = useState("");
@@ -217,8 +228,12 @@ export default function BuilderClient() {
           )}
 
           {sorted.length === 0 && !isLoading && !error && (
-            <div className="text-center py-16 text-muted-foreground text-sm">
-              Inga meta-lekar hittades. Prova ett annat sökord eller kör meta-uppdateringen.
+            <div className="flex flex-col items-center gap-3 py-16">
+              <Search className="w-10 h-10 text-muted-foreground/30" />
+              <div className="text-center">
+                <p className="font-semibold text-sm">Inga meta-lekar hittades</p>
+                <p className="text-muted-foreground text-xs mt-1">Prova ett annat sökord eller kör meta-uppdateringen</p>
+              </div>
             </div>
           )}
 
@@ -234,17 +249,20 @@ export default function BuilderClient() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold text-sm leading-tight">{rec.metaDeck.deck_name}</p>
-                    <span className={`text-sm font-bold shrink-0 ${coverageColor(rec.coveragePercent)}`}>
-                      {rec.coveragePercent}%
+                    <span className={`text-2xl font-black shrink-0 tabular-nums leading-none ${coverageColor(rec.coveragePercent)}`}>
+                      {rec.coveragePercent}<span className="text-xs font-semibold">%</span>
                     </span>
                   </div>
 
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {rec.metaDeck.format} · {rec.metaDeck.source}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize ${formatBadgeClass(rec.metaDeck.format)}`}>
+                      {rec.metaDeck.format}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{rec.metaDeck.source}</span>
+                  </div>
 
                   <div className="space-y-1">
-                    <Progress value={rec.coveragePercent} className="h-1.5" />
+                    <Progress value={rec.coveragePercent} className="h-2" />
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>{rec.alreadyHaveCount}/{rec.totalCards} kort</span>
                       {rec.metaDeck.popularity && <span>{rec.metaDeck.popularity} spelare</span>}
@@ -314,15 +332,18 @@ function RecommendationDetail({
         </Button>
         <div className="flex-1">
           <h2 className="text-xl font-bold">{rec.metaDeck.deck_name}</h2>
-          <p className="text-muted-foreground text-xs capitalize">
-            {rec.metaDeck.format} · {rec.metaDeck.source}
+          <div className="flex items-center gap-1.5">
+            <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize ${formatBadgeClass(rec.metaDeck.format)}`}>
+              {rec.metaDeck.format}
+            </span>
+            <span className="text-xs text-muted-foreground">{rec.metaDeck.source}</span>
             {rec.metaDeck.source_url && (
               <a href={rec.metaDeck.source_url} target="_blank" rel="noopener noreferrer"
-                className="ml-2 text-primary hover:underline">
+                className="text-xs text-primary hover:underline">
                 Se originalleken ↗
               </a>
             )}
-          </p>
+          </div>
         </div>
         <Button variant="outline" size="sm" onClick={handleSave} disabled={saving || saved} className="text-xs">
           {saved ? "✓ Sparad" : saving ? "Sparar..." : "Spara lek"}

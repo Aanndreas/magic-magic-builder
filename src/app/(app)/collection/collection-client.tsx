@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CollectionCard } from "@/lib/supabase/types";
 import { toast } from "sonner";
-import { Trash2, Upload, Plus, Search, AlertTriangle } from "lucide-react";
+import { Trash2, Upload, Plus, Search, AlertTriangle, Library } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { RiffleLoader } from "@/components/riffle-loader";
 
 interface Props {
   initialCards: CollectionCard[];
@@ -175,13 +176,19 @@ export default function CollectionClient({ initialCards }: Props) {
         </div>
       </div>
 
-      {/* Import progress */}
       {importProgress !== null && (
-        <div className="rounded-xl border border-border/60 bg-card p-4 space-y-2">
-          <p className="text-sm font-medium">
-            {importProgress >= 100 ? "✓ Importering klar!" : "Importerar kort — stanna kvar på sidan"}
-          </p>
-          <Progress value={importProgress} className="h-1.5 transition-all duration-300" />
+        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+          {importProgress < 100 ? (
+            <RiffleLoader
+              text={`Importerar kort... ${Math.round(importProgress)}%`}
+              className="py-6"
+            />
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-emerald-400">
+              <span>✓</span> Importering klar!
+            </div>
+          )}
+          <Progress value={importProgress} className="h-1 transition-all duration-300 rounded-none" />
         </div>
       )}
 
@@ -203,10 +210,24 @@ export default function CollectionClient({ initialCards }: Props) {
           </div>
 
           {filtered.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground text-sm">
-              {cards.length === 0
-                ? "Inga kort ännu. Importera en CSV eller lägg till kort manuellt."
-                : "Inga kort matchar sökningen."}
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              {cards.length === 0 ? (
+                <>
+                  <Library className="w-12 h-12 text-muted-foreground/30" />
+                  <div className="text-center">
+                    <p className="font-semibold text-sm">Din samling är tom</p>
+                    <p className="text-muted-foreground text-xs mt-1">Importera din Moxfield CSV för att komma igång</p>
+                  </div>
+                  <Button size="sm" onClick={() => fileRef.current?.click()} className="gap-1.5 glow-gold">
+                    <Upload className="w-3.5 h-3.5" /> Importera CSV
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Search className="w-10 h-10 text-muted-foreground/30" />
+                  <p className="text-muted-foreground text-sm">Inga kort matchar sökningen.</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="rounded-xl border border-border/60 overflow-hidden">
@@ -225,8 +246,8 @@ export default function CollectionClient({ initialCards }: Props) {
                       <TableCell className="font-medium text-sm py-2.5">
                         {card.card_name}
                         {card.foil && (
-                          <Badge variant="outline" className="ml-2 text-xs py-0 px-1.5 text-primary border-primary/30">
-                            Foil
+                          <Badge variant="outline" className="ml-2 text-xs py-0 px-1.5 badge-foil">
+                            ✦ Foil
                           </Badge>
                         )}
                       </TableCell>
