@@ -12,6 +12,7 @@ import type { CollectionCard } from "@/lib/supabase/types";
 import { toast } from "sonner";
 import { Trash2, Upload, Plus, Search, AlertTriangle, Library } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
+import { CardHover } from "@/components/card-hover";
 import {
   Dialog,
   DialogContent,
@@ -282,7 +283,9 @@ export default function CollectionClient({ initialCards }: Props) {
                   {sorted.map((card) => (
                     <TableRow key={card.id} className="border-border/30 hover:bg-accent/20 transition-colors">
                       <TableCell className="font-medium text-sm py-2.5">
-                        {card.card_name}
+                        <CardHover name={card.card_name} scryfallId={card.scryfall_id}>
+                          <span className="hover:text-primary transition-colors">{card.card_name}</span>
+                        </CardHover>
                         {card.foil && (
                           <Badge variant="outline" className="ml-2 text-xs py-0 px-1.5 badge-foil">
                             ✦ Foil
