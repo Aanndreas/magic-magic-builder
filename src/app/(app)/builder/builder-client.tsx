@@ -73,9 +73,48 @@ function formatBadgeClass(format: string): string {
   return map[format.toLowerCase()] ?? "bg-muted/50 text-muted-foreground border-border/40";
 }
 
+function FormatPicker({ onSelect }: { onSelect: (f: MTGFormat) => void }) {
+  const formats = [
+    { id: "commander", label: "Commander", desc: "100-kort singleton med commander", color: "purple" },
+    { id: "standard",  label: "Standard",  desc: "Senaste expansioner",              color: "blue" },
+    { id: "pioneer",   label: "Pioneer",   desc: "Non-rotating format",              color: "green" },
+    { id: "modern",    label: "Modern",    desc: "Modern cardpool",                  color: "red" },
+    { id: "pauper",    label: "Pauper",    desc: "Bara commons",                     color: "yellow" },
+  ] as const;
+
+  const colorMap = {
+    purple: "border-purple-500/40 hover:border-purple-500/70 hover:bg-purple-500/8 text-purple-300",
+    blue:   "border-blue-500/40 hover:border-blue-500/70 hover:bg-blue-500/8 text-blue-300",
+    green:  "border-green-500/40 hover:border-green-500/70 hover:bg-green-500/8 text-green-300",
+    red:    "border-red-500/40 hover:border-red-500/70 hover:bg-red-500/8 text-red-300",
+    yellow: "border-yellow-500/40 hover:border-yellow-500/70 hover:bg-yellow-500/8 text-yellow-300",
+  } as const;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-muted-foreground text-sm">Välj ett format för att se meta-lekar som passar din samling</p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {formats.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => onSelect(f.id as MTGFormat)}
+            className={`rounded-xl border bg-card p-5 text-left transition-all duration-150 card-hover-glow ${colorMap[f.color]}`}
+          >
+            <p className="font-bold text-lg mb-1">{f.label}</p>
+            <p className="text-xs text-muted-foreground leading-snug">{f.desc}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function BuilderClient() {
   const { formatPrice } = useCurrency();
-  const [format,          setFormat]          = useState<MTGFormat>("commander");
+  const [format,          setFormat]          = useState<MTGFormat | null>(null);
+  const [showTheme,       setShowTheme]       = useState(false);
   const [search,          setSearch]          = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedRec,     setSelectedRec]     = useState<DeckRecommendation | null>(null);
@@ -84,12 +123,13 @@ export default function BuilderClient() {
   const { data: recommendations, isLoading, error } = useQuery<DeckRecommendation[]>({
     queryKey: ["recommendations", format, debouncedSearch],
     queryFn: async () => {
-      const params = new URLSearchParams({ format });
+      const params = new URLSearchParams({ format: format! });
       if (debouncedSearch) params.set("search", debouncedSearch);
       const res = await fetch(`/api/recommendations?${params}`);
       if (!res.ok) throw new Error("Kunde inte hämta rekommendationer");
       return res.json();
     },
+    enabled: format !== null && format !== "commander",
   });
 
   function handleSearchChange(val: string) {
@@ -136,30 +176,42 @@ export default function BuilderClient() {
         </p>
       </div>
 
-      <Tabs defaultValue="meta">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="meta">Meta-lekar</TabsTrigger>
-          <TabsTrigger value="commander">Commander-lek</TabsTrigger>
-          <TabsTrigger value="theme">Bygg från tema</TabsTrigger>
-        </TabsList>
+      {/* Step 1: Format picker */}
+      {format === null && <FormatPicker onSelect={(f) => setFormat(f)} />}
 
-        <TabsContent value="meta" className="mt-5 space-y-5">
+      {/* Step 2a: Commander */}
+      {format === "commander" && (
+        <div className="space-y-5">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => { setFormat(null); setSelectedRec(null); }}
+              className="text-muted-foreground">
+              ← Byt format
+            </Button>
+            <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${formatBadgeClass("commander")}`}>
+              Commander
+            </span>
+          </div>
+          <CommanderBuilderClient />
+        </div>
+      )}
+
+      {/* Step 2b: Other formats */}
+      {format !== null && format !== "commander" && (
+        <div className="space-y-5">
+          {/* Back + format badge */}
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm"
+              onClick={() => { setFormat(null); setSearch(""); setDebouncedSearch(""); setSelectedRec(null); }}
+              className="text-muted-foreground">
+              ← Byt format
+            </Button>
+            <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${formatBadgeClass(format)}`}>
+              {FORMAT_LABELS[format]}
+            </span>
+          </div>
+
           {/* Controls */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Select
-              value={format}
-              onValueChange={(v) => { setFormat(v as MTGFormat); setSearch(""); setDebouncedSearch(""); }}
-            >
-              <SelectTrigger className="w-44 bg-card/60">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(FORMAT_LABELS).map(([val, label]) => (
-                  <SelectItem key={val} value={val}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -169,15 +221,14 @@ export default function BuilderClient() {
                 className="pl-9 bg-card/60"
               />
             </div>
-
             <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
               <SelectTrigger className="w-48 bg-card/60">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="coverage">Sortera: Täckning %</SelectItem>
-                <SelectItem value="budgetCost">Sortera: Billigaste köp</SelectItem>
-                <SelectItem value="popularity">Sortera: Popularitet</SelectItem>
+                <SelectItem value="coverage">Täckning %</SelectItem>
+                <SelectItem value="budgetCost">Billigaste köp</SelectItem>
+                <SelectItem value="popularity">Popularitet</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -196,21 +247,13 @@ export default function BuilderClient() {
             ))}
           </div>
 
-          {/* Loading skeletons */}
+          {/* Loading / error / empty */}
           {isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <DeckCardSkeleton key={i} />
-              ))}
+              {Array.from({ length: 6 }).map((_, i) => <DeckCardSkeleton key={i} />)}
             </div>
           )}
-
-          {error && (
-            <div className="text-center py-12 text-destructive text-sm">
-              {(error as Error).message}
-            </div>
-          )}
-
+          {error && <div className="text-center py-12 text-destructive text-sm">{(error as Error).message}</div>}
           {sorted.length === 0 && !isLoading && !error && (
             <div className="flex flex-col items-center gap-3 py-16">
               <Search className="w-10 h-10 text-muted-foreground/30" />
@@ -237,14 +280,12 @@ export default function BuilderClient() {
                       {rec.coveragePercent}<span className="text-xs font-semibold">%</span>
                     </span>
                   </div>
-
                   <div className="flex items-center gap-1.5">
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize ${formatBadgeClass(rec.metaDeck.format)}`}>
                       {rec.metaDeck.format}
                     </span>
                     <span className="text-xs text-muted-foreground">{rec.metaDeck.source}</span>
                   </div>
-
                   {(() => {
                     const colors = getDeckColors(rec.metaDeck.deck_name, rec.metaDeck.archetype ?? "");
                     const colorStyle: Record<string, string> = {
@@ -262,7 +303,6 @@ export default function BuilderClient() {
                       </div>
                     ) : null;
                   })()}
-
                   <div className="space-y-1">
                     <Progress value={rec.coveragePercent} className="h-2" />
                     <div className="flex justify-between text-xs text-muted-foreground">
@@ -270,14 +310,9 @@ export default function BuilderClient() {
                       {rec.metaDeck.popularity && <span>{rec.metaDeck.popularity} spelare</span>}
                     </div>
                   </div>
-
                   <div className="flex gap-3 text-xs pt-0.5">
-                    <span className="text-primary font-medium">
-                      Budget: {formatPrice(rec.budgetUpgrade.totalCost)}
-                    </span>
-                    <span className="text-muted-foreground">
-                      Full: {formatPrice(rec.fullNetdeck.totalCost)}
-                    </span>
+                    <span className="text-primary font-medium">Budget: {formatPrice(rec.budgetUpgrade.totalCost)}</span>
+                    <span className="text-muted-foreground">Full: {formatPrice(rec.fullNetdeck.totalCost)}</span>
                   </div>
                 </div>
               ))}
@@ -285,22 +320,23 @@ export default function BuilderClient() {
           )}
 
           {selectedRec && (
-            <RecommendationDetail
-              rec={selectedRec}
-              onBack={() => setSelectedRec(null)}
-              onSave={handleSaveRec}
-            />
+            <RecommendationDetail rec={selectedRec} onBack={() => setSelectedRec(null)} onSave={handleSaveRec} />
           )}
-        </TabsContent>
 
-        <TabsContent value="commander" className="mt-5">
-          <CommanderBuilderClient />
-        </TabsContent>
-
-        <TabsContent value="theme" className="mt-5">
-          <ThemeBuilderClient />
-        </TabsContent>
-      </Tabs>
+          {/* Bygg från tema link */}
+          {!selectedRec && (
+            <div className="text-center pt-4">
+              <button
+                onClick={() => setShowTheme((v) => !v)}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                {showTheme ? "↑ Dölj tema-byggaren" : "Vill du bygga från ett tema istället? →"}
+              </button>
+              {showTheme && <div className="mt-6"><ThemeBuilderClient /></div>}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

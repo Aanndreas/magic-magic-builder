@@ -11,7 +11,7 @@ import { useTheme } from "next-themes";
 import { useCurrency } from "@/contexts/currency-context";
 
 const navItems = [
-  { href: "/dashboard",  label: "Dashboard",      icon: LayoutDashboard },
+  { href: "/dashboard",  label: "Hem",             icon: LayoutDashboard },
   { href: "/collection", label: "Min samling",     icon: Library },
   { href: "/builder",    label: "Lek-byggaren",    icon: Wand2 },
   { href: "/saved",      label: "Sparade lekar",   icon: Bookmark },
