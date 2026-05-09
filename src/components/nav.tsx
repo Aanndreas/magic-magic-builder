@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Library, Wand2, Bookmark, LogOut, Sun, Moon, Monitor } from "lucide-react";
+import { LayoutDashboard, Library, Wand2, Bookmark, LogOut, Sun, Moon } from "lucide-react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useCurrency } from "@/contexts/currency-context";
@@ -83,13 +83,9 @@ export default function Nav() {
               variant="ghost"
               size="icon"
               className="w-8 h-8 text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                if (theme === "system") setTheme("light");
-                else if (theme === "light") setTheme("dark");
-                else setTheme("system");
-              }}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
-              {theme === "light" ? <Sun className="w-4 h-4" /> : theme === "dark" ? <Moon className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
+              {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </Button>
           </div>
 
