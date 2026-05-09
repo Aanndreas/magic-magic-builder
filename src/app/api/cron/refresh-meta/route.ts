@@ -78,10 +78,11 @@ export async function GET(request: Request) {
     results.errors++;
   }
 
-  const { data: collectionCards } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: collectionCards } = await (supabase as any)
     .from("collection_cards")
     .select("id, card_name, scryfall_id")
-    .limit(5000);
+    .limit(5000) as { data: Array<{ id: string; card_name: string; scryfall_id: string | null }> | null };
 
   if (collectionCards && collectionCards.length > 0) {
     const uniqueNames = [...new Set(collectionCards.map((c) => c.card_name))];
@@ -99,7 +100,8 @@ export async function GET(request: Request) {
           price_usd: parseFloat(scryfallData.get(c.card_name.toLowerCase())?.prices?.usd ?? "0") || null,
         }));
       for (const update of updates) {
-        await supabase.from("collection_cards").update({ price_usd: update.price_usd }).eq("id", update.id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any).from("collection_cards").update({ price_usd: update.price_usd }).eq("id", update.id);
       }
       await new Promise((r) => setTimeout(r, 300));
     }

@@ -123,6 +123,7 @@ describe("buildRecommendation – coverage calculation", () => {
       foil: false,
       set_code: null,
       collector_number: null,
+      price_usd: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
