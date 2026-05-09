@@ -9,7 +9,8 @@ export default async function CollectionPage() {
     .from("collection_cards")
     .select("*")
     .eq("user_id", user!.id)
-    .order("card_name");
+    .order("card_name")
+    .limit(10000);
 
   return <CollectionClient initialCards={cards ?? []} />;
 }

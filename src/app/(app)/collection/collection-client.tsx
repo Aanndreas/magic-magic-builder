@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CollectionCard } from "@/lib/supabase/types";
 import { toast } from "sonner";
 import { Trash2, Upload, Plus, Search, AlertTriangle, Library } from "lucide-react";
@@ -29,9 +28,13 @@ interface Props {
 }
 
 export default function CollectionClient({ initialCards }: Props) {
+  type SortCol = "name" | "quantity" | "price" | "set";
+  type SortDir = "asc" | "desc";
+
   const [cards,          setCards]          = useState(initialCards);
   const [search,         setSearch]         = useState("");
-  const [sortBy,         setSortBy]         = useState<"name" | "quantity_desc" | "quantity_asc" | "price_desc" | "price_asc" | "set">("name");
+  const [sortCol,        setSortCol]        = useState<SortCol>("name");
+  const [sortDir,        setSortDir]        = useState<SortDir>("asc");
   const [newCardName,    setNewCardName]    = useState("");
   const [newCardQty,     setNewCardQty]     = useState(1);
   const [addingCard,     setAddingCard]     = useState(false);
@@ -42,19 +45,28 @@ export default function CollectionClient({ initialCards }: Props) {
   const qc      = useQueryClient();
   const { formatPrice } = useCurrency();
 
+  function handleSort(col: SortCol) {
+    if (sortCol === col) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortCol(col);
+      setSortDir(col === "price" ? "asc" : "asc");
+    }
+  }
+
   const filtered = cards.filter((c) =>
     c.card_name.toLowerCase().includes(search.toLowerCase())
   );
 
   const sorted = [...filtered].sort((a, b) => {
-    switch (sortBy) {
-      case "quantity_desc": return b.quantity - a.quantity;
-      case "quantity_asc":  return a.quantity - b.quantity;
-      case "price_desc":    return (b.price_usd ?? 0) - (a.price_usd ?? 0);
-      case "price_asc":     return (a.price_usd ?? 0) - (b.price_usd ?? 0);
-      case "set":           return (a.set_code ?? "").localeCompare(b.set_code ?? "");
-      default:              return a.card_name.localeCompare(b.card_name);
+    let cmp = 0;
+    switch (sortCol) {
+      case "quantity": cmp = a.quantity - b.quantity; break;
+      case "price":    cmp = (a.price_usd ?? 0) - (b.price_usd ?? 0); break;
+      case "set":      cmp = (a.set_code ?? "").localeCompare(b.set_code ?? ""); break;
+      default:         cmp = a.card_name.localeCompare(b.card_name); break;
     }
+    return sortDir === "asc" ? cmp : -cmp;
   });
 
   async function handleAddCard(e: React.FormEvent) {
@@ -214,29 +226,14 @@ export default function CollectionClient({ initialCards }: Props) {
         </TabsList>
 
         <TabsContent value="list" className="space-y-4 mt-4">
-          <div className="flex gap-2">
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-              <SelectTrigger className="w-52 bg-card/60 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Namn (A–Ö)</SelectItem>
-                <SelectItem value="quantity_desc">Antal (flest)</SelectItem>
-                <SelectItem value="quantity_asc">Antal (minst)</SelectItem>
-                <SelectItem value="price_desc">Pris (dyrast)</SelectItem>
-                <SelectItem value="price_asc">Pris (billigast)</SelectItem>
-                <SelectItem value="set">Set (A–Ö)</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Sök efter kort..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 bg-card/60"
-              />
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Sök efter kort..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-card/60"
+            />
           </div>
 
           {filtered.length === 0 ? (
@@ -264,10 +261,20 @@ export default function CollectionClient({ initialCards }: Props) {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/40 hover:bg-transparent">
-                    <TableHead className="text-xs text-muted-foreground uppercase tracking-wide">Kortnamn</TableHead>
-                    <TableHead className="w-20 text-center text-xs text-muted-foreground uppercase tracking-wide">Antal</TableHead>
-                    <TableHead className="w-24 text-xs text-muted-foreground uppercase tracking-wide">Set</TableHead>
-                    <TableHead className="w-24 text-right text-xs text-muted-foreground uppercase tracking-wide">Pris</TableHead>
+                    {(["name","quantity","set","price"] as SortCol[]).map((col) => {
+                      const labels: Record<SortCol, string> = { name: "Kortnamn", quantity: "Antal", set: "Set", price: "Pris" };
+                      const active = sortCol === col;
+                      const arrow  = active ? (sortDir === "asc" ? " ↑" : " ↓") : "";
+                      return (
+                        <TableHead
+                          key={col}
+                          onClick={() => handleSort(col)}
+                          className={`text-xs uppercase tracking-wide cursor-pointer select-none transition-colors ${col === "quantity" ? "w-20 text-center" : col === "set" ? "w-24" : col === "price" ? "w-24 text-right" : ""} ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                        >
+                          {labels[col]}{arrow}
+                        </TableHead>
+                      );
+                    })}
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
